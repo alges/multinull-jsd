@@ -1,5 +1,4 @@
-from .types import CDFBackendName
-
+from multinull_jsd.types import CDFBackendName
 from null_structures import IndexedHypotheses
 from typing import Optional, Union, Sequence
 

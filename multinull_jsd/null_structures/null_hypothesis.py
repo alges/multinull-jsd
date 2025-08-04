@@ -1,14 +1,12 @@
 from multinull_jsd.cdf_backends import CDFBackend
+from multinull_jsd.types import FloatArray
 
 from typing import Any
-
-import numpy.typing as npt
-import numpy as np
 
 
 class NullHypothesis:
 
-    def __init__(self, prob_vector: npt.NDArray[np.float64], cdf_backend: CDFBackend) -> None:
+    def __init__(self, prob_vector: FloatArray, cdf_backend: CDFBackend) -> None:
         pass
 
     def set_target_alpha(self, target_alpha: float) -> None:
@@ -17,7 +15,7 @@ class NullHypothesis:
     def get_jsd_threshold(self) -> float:
         pass
 
-    def infer_p_value(self, query: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    def infer_p_value(self, query: FloatArray) -> FloatArray:
         pass
 
     def __eq__(self, other: Any) -> bool:

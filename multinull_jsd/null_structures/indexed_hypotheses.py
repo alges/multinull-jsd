@@ -1,7 +1,5 @@
 from multinull_jsd.cdf_backends import CDFBackend
-
-import numpy.typing as npt
-import numpy as np
+from multinull_jsd.types import FloatArray
 
 
 class IndexedHypotheses:
@@ -9,7 +7,7 @@ class IndexedHypotheses:
     def __init__(self, cdf_backend: CDFBackend) -> None:
         pass
 
-    def add_null(self, prob_vector: npt.NDArray[np.float64], target_alpha: float) -> int:
+    def add_null(self, prob_vector: FloatArray, target_alpha: float) -> int:
         pass
 
     def __getitem__(self, index):

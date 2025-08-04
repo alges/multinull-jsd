@@ -1,7 +1,6 @@
 from .base import CDFBackend
 
-import numpy.typing as npt
-import numpy as np
+from multinull_jsd.types import FloatArray
 
 
 class NormalMCCDFBackend(CDFBackend):
@@ -9,5 +8,5 @@ class NormalMCCDFBackend(CDFBackend):
         super().__init__(evidence_size)
         # TODO: Incorporate Monte-Carlo elements
 
-    def get_cdf(self, prob_vector: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    def get_cdf(self, prob_vector: FloatArray) -> FloatArray:
         pass
