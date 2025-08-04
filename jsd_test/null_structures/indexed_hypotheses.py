@@ -1,4 +1,4 @@
-from cdf_backends import CDFBackend
+from jsd_test.cdf_backends import CDFBackend
 
 import numpy.typing as npt
 import numpy as np

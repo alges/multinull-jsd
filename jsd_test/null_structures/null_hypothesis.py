@@ -1,4 +1,4 @@
-from cdf_backends import CDFBackend
+from jsd_test.cdf_backends import CDFBackend
 
 from typing import Any
 
