@@ -1,15 +1,15 @@
+from .types import CDFBackendName
+
 from null_structures import IndexedHypotheses
-from typing import Literal, Optional, Union, Sequence
+from typing import Optional, Union, Sequence
 
 import numpy.typing as npt
-
-_CDFBackendName = Literal["exact", "mc_multinomial", "mc_normal"]
 
 
 class MultiNullJSDTest:
 
     def __init__(
-        self, evidence_size: int, prob_dim: int, cdf_method: _CDFBackendName = "exact",
+        self, evidence_size: int, prob_dim: int, cdf_method: CDFBackendName = "exact",
         mc_samples: Optional[int] = None, seed: Optional[int] = None
     ) -> None:
         pass
