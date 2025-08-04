@@ -1,4 +1,4 @@
-from multinull_jsd.types import FloatArray
+from multinull_jsd.types import FloatArray, CDFCallable
 from abc import ABC, abstractmethod
 
 
@@ -8,5 +8,5 @@ class CDFBackend(ABC):
         pass
 
     @abstractmethod
-    def get_cdf(self, prob_vector: FloatArray) -> FloatArray:
+    def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
         pass

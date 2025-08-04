@@ -1,6 +1,6 @@
 from .base import CDFBackend
 
-from multinull_jsd.types import FloatArray
+from multinull_jsd.types import FloatArray, CDFCallable
 
 
 class MultinomialMCCDFBackend(CDFBackend):
@@ -8,5 +8,5 @@ class MultinomialMCCDFBackend(CDFBackend):
         super().__init__(evidence_size)
         # TODO: Incorporate Monte-Carlo elements
 
-    def get_cdf(self, prob_vector: FloatArray) -> FloatArray:
+    def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
         pass
