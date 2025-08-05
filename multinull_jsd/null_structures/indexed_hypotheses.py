@@ -1,3 +1,8 @@
+"""
+A thin wrapper around ``list`` that stores *NullHypothesis* objects and assigns **stable, consecutive integer indices**
+to them. The container enforces invariants (index validity, recycling policy) that would otherwise clutter the
+high-level logic inside the core package.
+"""
 from multinull_jsd.null_structures.null_hypothesis import NullHypothesis
 from multinull_jsd.cdf_backends import CDFBackend
 from multinull_jsd.types import FloatArray
@@ -10,14 +15,13 @@ class IndexedHypotheses:
 
     The data structure ensures **index continuity**: deleted indices are recycled only when the container is empty,
     mimicking the behaviour expected by users in statistical software.
+
+    Parameters
+    ----------
+    cdf_backend
+        Back-end shared by all contained null hypotheses.
     """
     def __init__(self, cdf_backend: CDFBackend) -> None:
-        """
-        Parameters
-        ----------
-        cdf_backend
-            Back-end shared by all contained null hypotheses.
-        """
         raise NotImplementedError
 
     def add_null(self, prob_vector: FloatArray, target_alpha: float) -> int:
@@ -34,7 +38,7 @@ class IndexedHypotheses:
         Returns
         -------
         int
-            Zero-based index assigned to the new null.
+            One-based index assigned to the new null.
         """
         raise NotImplementedError
 

@@ -11,9 +11,9 @@ Typical usage
 >>> p_vals = test.infer_p_values(h)  # Array of p-values for each null hypothesis
 >>> decisions = test.infer_decisions(h)  # Array of decisions (1 or 2 for each null hypothesis, -1 for the alternative)
 """
+from multinull_jsd.null_structures import IndexedHypotheses
 from multinull_jsd.types import CDFBackendName, FloatArray
-from null_structures import IndexedHypotheses
-from typing import Optional, Sequence
+from typing import Optional, Sequence, overload
 
 import numpy.typing as npt
 
@@ -38,7 +38,7 @@ class MultiNullJSDTest:
     Raises
     ------
     ValueError
-        On invalid ``evidence_size``, ``prob_dim``, ``cdf_method``, or ``mc_samples``.
+        On invalid ``evidence_size``, ``prob_dim``, ``cdf_method``, ``mc_samples``, or ``seed``.
     """
 
     def __init__(
@@ -74,6 +74,7 @@ class MultiNullJSDTest:
             Index or sequence of indices of null hypotheses to remove. Must be valid indices of the current nulls. The
             indexing is one-based, i.e., the first null hypothesis has index 1.
         """
+        # TODO: Ensure unique null indexes are considered
         raise NotImplementedError
 
     def get_nulls(self) -> IndexedHypotheses:
@@ -95,7 +96,9 @@ class MultiNullJSDTest:
         ----------
         query
             Histogram or batch of histograms to test. Must be a 1-D array of shape ``(k,)`` or a 2-D array of shape
-            ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories.
+            ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories. The histograms
+            must be not normalized, i.e., they need to be raw counts of samples in each category and sum to the
+            evidence size.
 
         Returns
         -------
@@ -117,7 +120,9 @@ class MultiNullJSDTest:
         ----------
         query
             Histogram or batch of histograms to test. Must be a 1-D array of shape ``(k,)`` or a 2-D array of shape
-            ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories.
+            ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories. The histograms
+            must be not normalized, i.e., they need to be raw counts of samples in each category and sum to the
+            evidence size.
 
         Returns
         -------
@@ -127,6 +132,11 @@ class MultiNullJSDTest:
             If the input is a batch, the output will be a 1-D array of integers.
         """
         raise NotImplementedError
+
+    @overload
+    def get_alpha(self, null_index: int) -> float: ...
+    @overload
+    def get_alpha(self, null_index: Sequence[int]) -> FloatArray: ...
 
     def get_alpha(self, null_index: int | Sequence[int]) -> float | FloatArray:
         """
@@ -149,7 +159,7 @@ class MultiNullJSDTest:
 
     def get_beta(self, query: npt.ArrayLike) -> float | FloatArray:
         """
-        Estimate the maximum Type-II error probability (:math:`\\beta`) over all null hypotheses for a given histogram
+        Get the maximum Type-II error probability (:math:`\\beta`) over all null hypotheses for a given histogram
         or batch of histograms. This is the probability of failing to reject null hypotheses when the alternative is
         true.
 

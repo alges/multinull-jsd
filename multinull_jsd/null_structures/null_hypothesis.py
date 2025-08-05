@@ -1,3 +1,15 @@
+"""
+Data holder representing **one** null hypothesis.
+
+Responsibilities
+----------------
+* Store probability vector :math:`\\mathbf{p}` and target significance level.
+* Offer fast vectorised p-value computation via a supplied CDF backend.
+* Provide the decision threshold needed by the JSd rule.
+
+The heavy mathematical lifting lives in the CDF backend; this module focuses on input validation, bookkeeping and a
+clean comparison API (``__eq__``).
+"""
 from multinull_jsd.cdf_backends import CDFBackend
 from multinull_jsd.types import FloatArray
 
@@ -49,7 +61,7 @@ class NullHypothesis:
 
     def get_jsd_threshold(self) -> float:
         """
-        Return the critical JSd value :math:`\\tau` such that :math:`\mathrm{CDF}(\\tau^-) \\geq 1-\\alpha`.
+        Return the critical JSd value :math:`\\tau` such that :math:`\\mathrm{CDF}(\\tau^-) \\geq 1-\\alpha`.
 
         Returns
         -------

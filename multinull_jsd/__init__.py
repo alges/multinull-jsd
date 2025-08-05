@@ -21,3 +21,5 @@ provide pluggable CDF estimation back-ends and internal data structures. These r
 the normal import path.
 """
 from .core import MultiNullJSDTest
+
+__all__ = ["MultiNullJSDTest"]

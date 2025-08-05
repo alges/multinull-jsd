@@ -49,7 +49,8 @@ class CDFBackend(ABC):
         Returns
         -------
         CDFCallable
-            A monotone, vectorised cumulative-distribution function.
+            A monotone, vectorised cumulative-distribution function. Returned callable must accept either a Python
+            scalar or a numpy array-like object and return a Python float or numpy array, respectively.
 
         Raises
         ------
