@@ -12,11 +12,11 @@ Typical usage
 >>> decisions = test.infer_decisions(h)  # Array of decisions (1 or 2 for each null hypothesis, -1 for the alternative)
 """
 from multinull_jsd.null_structures import IndexedHypotheses
-from multinull_jsd.cdf_backends import (
-    CDF_BACKEND_FACTORY, MC_CDF_BACKENDS, CDFBackend, ExactCDFBackend, MultinomialMCCDFBackend, NormalMCCDFBackend
+from multinull_jsd.cdf_backends import CDF_BACKEND_FACTORY, MC_CDF_BACKENDS
+from multinull_jsd._validators import (
+validate_int_value, validate_histogram_batch, validate_probability_batch, validate_null_index_set
 )
-from multinull_jsd._validators import FLOAT_TOL, validate_int_value
-from multinull_jsd.types import FloatArray, FloatDType
+from multinull_jsd.types import FloatArray, IntArray, FloatDType, IntDType
 from typing import Optional, Sequence, overload
 
 import numpy.typing as npt
@@ -54,7 +54,7 @@ class MultiNullJSDTest:
     ) -> None:
 
         # Parameter validation
-        validate_int_value(name="evidence_size", value=evidence_size, min_value=1)
+        self._n: int = validate_int_value(name="evidence_size", value=evidence_size, min_value=1)
         self._k: int = validate_int_value(name="prob_dim", value=prob_dim, min_value=1)
 
         if cdf_method not in CDF_BACKEND_FACTORY.keys():
@@ -66,7 +66,7 @@ class MultiNullJSDTest:
 
         # Initialization of container for null hypotheses
         self._nulls: IndexedHypotheses = IndexedHypotheses(
-            cdf_backend=CDF_BACKEND_FACTORY[cdf_method](evidence_size, mc_samples, seed)
+            cdf_backend=CDF_BACKEND_FACTORY[cdf_method](self._n, mc_samples, seed)
         )
 
         raise NotImplementedError
@@ -75,38 +75,32 @@ class MultiNullJSDTest:
         """
         Add one or multiple null hypotheses.
 
-        Rules
-        -----
-        * If *target_alpha* is a scalar, the same α is applied to all new nulls; if it is a 1-D sequence, it must match
-          the number of probability vectors provided.
-        * Probability vectors must sum to one. ``prob_vector``  must have shape ``(k,)`` or ``(m, k)``.
+        Parameters
+        ----------
+        prob_vector
+            Probability vector(s) for the null hypothesis or hypotheses. Can be a 1-D array of shape ``(k,)`` or a 2-D
+            array of shape ``(m, k)``, where ``m`` is the number of nulls and ``k`` is the number of categories.
+        target_alpha
+            Desired significance level(s) for the null hypothesis or hypotheses. Can be a scalar float or a 1-D array of
+            floats of length ``m``. If a scalar is provided, the same significance level is applied to all new nulls.
 
         Raises
         ------
         ValueError
             Shape mismatch, invalid probability vector, or invalid target significance level.
         """
-
         # Validation of the probability vector(s)
-        prob_vector = np.asarray(prob_vector, dtype=FloatDType)
-        if prob_vector.ndim == 1:
-            prob_vector = prob_vector[np.newaxis, :]
-        elif prob_vector.ndim != 2:
-            raise ValueError("Probability vector must be 1-D or 2-D (batch of histograms).")
-        if prob_vector.shape[1] != self._k:
-            raise ValueError(f"Probability vector must have {self._k} categories. Got shape {prob_vector.shape}.")
-        if np.any(a=prob_vector < 0):
-            raise ValueError("Probability values must be non-negative.")
-        if not np.all(a=np.isclose(a=np.sum(a=prob_vector, axis=1), b=1.0, atol=FLOAT_TOL)):
-            raise ValueError("Probability vectors must sum to one.")
+        prob_array: FloatArray = validate_probability_batch(
+            name="prob_vector", value=prob_vector, n_categories=self._k
+        ).astype(dtype=FloatDType)
 
         # Validation of the target alpha(s)
         target_alpha_vec: FloatArray = np.atleast_1d(target_alpha).astype(dtype=FloatDType)
         if target_alpha_vec.ndim != 1:
             raise ValueError("Target alpha must be a scalar or a 1-D sequence.")
         if target_alpha_vec.size == 1:
-            target_alpha_vec = np.broadcast_to(array=target_alpha_vec, shape=(prob_vector.shape[0], ))
-        elif target_alpha_vec.shape[0] != prob_vector.shape[0]:
+            target_alpha_vec = np.broadcast_to(array=target_alpha_vec, shape=(prob_array.shape[0],))
+        elif target_alpha_vec.shape[0] != prob_array.shape[0]:
             raise ValueError("Target alpha vector and probability vector must have the same length.")
 
         raise NotImplementedError
@@ -121,14 +115,9 @@ class MultiNullJSDTest:
             Index or sequence of indices of null hypotheses to remove. Must be valid indices of the current nulls. The
             indexing is one-based, i.e., the first null hypothesis has index 1.
         """
-        if isinstance(null_index, int):
-            null_index_set: set[int] = {null_index}
-        try:
-            null_index_set = set(null_index)
-        except TypeError:
-            raise TypeError("null_index must be an integer or a sequence of integers.")
-        for idx in null_index_set:
-            validate_int_value(name="null_index value or element", value=idx, min_value=1, max_value=len(self._nulls))
+        null_index_set: set[int] = validate_null_index_set(
+            name="null_index", value=null_index, n_nulls=len(self._nulls)
+        )
         raise NotImplementedError
 
     def get_nulls(self) -> IndexedHypotheses:
@@ -142,13 +131,13 @@ class MultiNullJSDTest:
         """
         raise NotImplementedError
 
-    def infer_p_values(self, query: npt.ArrayLike) -> npt.ArrayLike:
+    def infer_p_values(self, hist_query: npt.ArrayLike) -> npt.ArrayLike:
         """
         Compute per-null p-values for a histogram or batch of histograms.
 
         Parameters
         ----------
-        query
+        hist_query
             Histogram or batch of histograms to test. Must be a 1-D array of shape ``(k,)`` or a 2-D array of shape
             ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories. The histograms
             must be not normalized, i.e., they need to be raw counts of samples in each category and sum to the
@@ -161,9 +150,12 @@ class MultiNullJSDTest:
             ``(L,)``, where ``L`` is the number of null hypotheses. Each entry corresponds to the p-value for the
             respective null hypothesis. If the input is a batch, the output will have shape ``(m,L)``.
         """
+        query_array: IntArray = validate_histogram_batch(
+            name="query", value=hist_query, n_categories=self._k, histogram_size=self._n
+        ).astype(dtype=IntDType)
         raise NotImplementedError
 
-    def infer_decisions(self, query: npt.ArrayLike) -> int | npt.NDArray[int]:
+    def infer_decisions(self, hist_query: npt.ArrayLike) -> int | npt.NDArray[int]:
         """
         Apply the decision rule and return an *integer label array* with the same batch shape as *query*:
 
@@ -173,7 +165,7 @@ class MultiNullJSDTest:
 
         Parameters
         ----------
-        query
+        hist_query
             Histogram or batch of histograms to test. Must be a 1-D array of shape ``(k,)`` or a 2-D array of shape
             ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories. The histograms
             must be not normalized, i.e., they need to be raw counts of samples in each category and sum to the
@@ -186,6 +178,9 @@ class MultiNullJSDTest:
             respective histogram in the batch. If the input is a single histogram, the output will be a scalar integer.
             If the input is a batch, the output will be a 1-D array of integers.
         """
+        query_array: IntArray = validate_histogram_batch(
+            name="query", value=hist_query, n_categories=self._k, histogram_size=self._n
+        ).astype(dtype=IntDType)
         raise NotImplementedError
 
     @overload
@@ -210,19 +205,21 @@ class MultiNullJSDTest:
             specified null hypothesis. If a single index is provided, a scalar float is returned; if a sequence of
             indices is provided, a 1-D array of floats is returned.
         """
+        null_index_set: set[int] = validate_null_index_set(
+            name="null_index", value=null_index, n_nulls=len(self._nulls)
+        )
         raise NotImplementedError
 
-    def get_beta(self, query: npt.ArrayLike) -> float | FloatArray:
+    def get_beta(self, prob_query: npt.ArrayLike) -> float | FloatArray:
         """
-        Get the maximum Type-II error probability (:math:`\\beta`) over all null hypotheses for a given histogram
-        or batch of histograms. This is the probability of failing to reject null hypotheses when the alternative is
-        true.
+        Get the maximum Type-II error probability (:math:`\\beta`) over all null hypotheses for a given probability
+        vector
 
         Parameters
         ----------
-        query
-            Histogram or batch of histograms to test. Must be a 1-D array of shape ``(k,)`` or a 2-D array of shape
-            ``(m,k)``, where ``m`` is the number of histograms and ``k`` is the number of categories.
+        prob_query
+            Probability vector or batch of probability vectors to test. Must be a 1-D array of shape ``(k,)`` or a 2-D
+            array of shape ``(m,k)``, where ``m`` is the number of vectors and ``k`` is the number of categories.
 
         Returns
         -------
@@ -230,6 +227,9 @@ class MultiNullJSDTest:
             Estimated maximum Type-II error probability over all null hypotheses. If the input is a single histogram,
             a scalar float is returned; if the input is a batch, a 1-D array of floats is returned.
         """
+        query_array: FloatArray = validate_probability_batch(
+            name="prob_vector", value=prob_query, n_categories=self._k
+        ).astype(dtype=FloatDType)
         raise NotImplementedError
 
     def get_fwer(self) -> float:

@@ -4,16 +4,22 @@ Utility type aliases and protocols used across *multinull_jsd*.
 The file purposefully contains **no runtime logic** so it can be imported without triggering heavy scientific routines
 during static-typing or documentation builds.
 """
-from typing import Literal, Protocol, TypeAlias, Final, runtime_checkable, overload, get_args
+from typing import Protocol, TypeAlias, runtime_checkable, overload
 
 import numpy.typing as npt
 import numpy as np
 
-#: Alias for a NumPy array of ``float64`` with a fixed shape.
+#: Alias for a NumPy dtype representing 64-bit floating-point numbers.
 FloatDType: TypeAlias = np.float64
+
+#: Alias for a NumPy dtype representing 64-bit integers.
+IntDType: TypeAlias = np.int64
 
 #: Alias for a NumPy array of ``float64`` with *any* shape.
 FloatArray: TypeAlias = npt.NDArray[FloatDType]
+
+#: Alias for a NumPy array of ``int64`` with *any* shape.
+IntArray: TypeAlias = npt.NDArray[IntDType]
 
 
 @runtime_checkable
