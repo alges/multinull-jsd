@@ -36,6 +36,8 @@ def validate_int_value(name: str, value: Any, min_value: Optional[int] = None, m
     ValueError
         If *value* is outside the defined bounds.
     """
+    if min_value is not None and max_value is not None and min_value > max_value:
+        raise ValueError(f"Inconsistent bounds for {name}: min_value ({min_value}) > max_value ({max_value}).")
     if not isinstance(value, numbers.Integral) or isinstance(value, bool):
         # bool is a subclass of int, so we need to exclude it explicitly
         raise TypeError(f"{name} must be an integer. Got {type(value).__name__}.")
@@ -72,9 +74,11 @@ def validate_finite_array(name: str, value: Any) -> npt.NDArray:
     array: npt.NDArray = np.asarray(value)
     if not np.issubdtype(array.dtype, np.number):
         raise TypeError(f"{name} must be a numeric array-like object. Got {array.dtype.name}.")
+    if np.issubdtype(array.dtype, np.complexfloating):
+        raise TypeError(f"{name} must be real-valued, not complex.")
     if array.dtype == np.bool_:
         raise TypeError(f"{name} must not be a boolean array-like object.")
-    if not np.all(a=np.isfinite(a=array)):
+    if not np.all(a=np.isfinite(array)):
         raise ValueError(f"{name} must contain only finite values; not NaN or Inf.")
     return array
 
@@ -104,6 +108,7 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
     npt.NDArray
         The validated array, converted to a numpy array.
     """
+    n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
     array: npt.NDArray = validate_finite_array(name=name, value=value)
     if array.ndim == 1:
         array = np.expand_dims(a=array, axis=0)
@@ -143,8 +148,9 @@ def validate_probability_batch(name: str, value: Any, n_categories: int) -> Floa
     npt.NDArray
         The validated probability batch, converted to a numpy array.
     """
+    n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
     array: npt.NDArray = validate_non_negative_batch(name=name, value=value, n_categories=n_categories)
-    if not np.allclose(a=np.sum(a=array, axis=1), b=1.0, atol=FLOAT_TOL):
+    if not np.allclose(a=np.sum(a=array, axis=1), b=1.0, atol=FLOAT_TOL, rtol=0.0):
         raise ValueError(f"{name} must contain probability distributions that sum to one in each row.")
     return array.astype(dtype=FloatDType)
 
@@ -177,9 +183,21 @@ def validate_histogram_batch(name: str, value: Any, n_categories: int, histogram
     npt.NDArray
         The validated histogram batch, converted to a numpy array.
     """
+    type_limit: int = np.iinfo(IntDType).max
+    n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
+    histogram_size = validate_int_value(
+        name="histogram_size", value=histogram_size, min_value=1, max_value=int(type_limit)
+    )
     array: npt.NDArray = validate_non_negative_batch(name=name, value=value, n_categories=n_categories)
-    if not np.issubdtype(array.dtype, np.integer) and np.any(a=~np.equal(a=array, b=np.floor(a=array))):
+    if (
+        not np.issubdtype(array.dtype, np.integer)
+        and np.any(a=~np.isclose(a=array, b=np.floor(array), atol=FLOAT_TOL, rtol=0.0))
+    ):
         raise ValueError(f"{name} must contain histograms with integer counts in each row.")
+    if np.any(a=array > type_limit):
+        raise ValueError(
+            f"{name} must contain histograms with counts that fit into {IntDType.__name__} (max {type_limit})."
+        )
     int_array: IntArray = array.astype(dtype=IntDType)
     if np.any(a=int_array.sum(axis=1) != histogram_size):
         raise ValueError(f"{name} must contain histograms with exactly {histogram_size} samples in each row.")
@@ -210,8 +228,14 @@ def validate_null_indices(name: str, value: Any, n_nulls: int) -> tuple[int, ...
     tuple[int]
         A tuple of unique, validated indices.
     """
-    if isinstance(value, int):
-        value_seq: tuple[int] = (value,)
+    n_nulls = validate_int_value(name="n_nulls", value=n_nulls, min_value=0)
+    if n_nulls == 0:
+        raise ValueError("There should be at least one null hypothesis in the container (n_nulls > 0).")
+    if isinstance(value, bool):
+        raise TypeError(f"{name} must be an integer or an iterable of integers. Got {type(value).__name__}.")
+    value_seq: tuple[int, ...]
+    if isinstance(value, numbers.Integral):
+        value_seq = (int(value),)
     elif isinstance(value, (str, bytes)):
         raise TypeError(f"{name} must be an integer or an iterable of integers. Got {type(value).__name__}.")
     else:
