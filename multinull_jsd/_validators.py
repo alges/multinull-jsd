@@ -3,10 +3,13 @@
 side-effect-free checks** so that importing it never triggers heavy numerical work (NumPy is imported lazily and only
 for datatype inspection).
 """
+from multinull_jsd.types import FloatArray, FloatDType, IntArray, IntDType
 from typing import Any, Optional
 
 import numpy.typing as npt
 import numpy as np
+
+import numbers
 
 
 FLOAT_TOL: float = 1e-12
@@ -31,15 +34,49 @@ def validate_int_value(name: str, value: Any, min_value: Optional[int] = None, m
     TypeError
         If *value* is not an ``int``.
     ValueError
-        If the integer is not strictly positive.
+        If *value* is outside the defined bounds.
     """
-    if not isinstance(value, int):
+    if not isinstance(value, numbers.Integral) or isinstance(value, bool):
+        # bool is a subclass of int, so we need to exclude it explicitly
         raise TypeError(f"{name} must be an integer. Got {type(value).__name__}.")
+    value = int(value)
     if min_value is not None and value < min_value:
         raise ValueError(f"{name} must be at least {min_value}. Got {value!r}.")
     if max_value is not None and value > max_value:
         raise ValueError(f"{name} must be at most {max_value}. Got {value!r}.")
     return value
+
+def validate_finite_array(name: str, value: Any) -> npt.NDArray:
+    """
+    Check that the given value is a numeric array-like object with finite entries.
+
+    Parameters
+    ----------
+    name
+        Human-readable name of the parameter – used verbatim in the error message to ease debugging.
+    value
+        Object to validate. Usually the raw argument received by a public API.
+
+    Raises
+    ------
+    TypeError
+        If *value* is not a numeric array-like object.
+    ValueError
+        If *value* contains non-finite values (NaN or Inf).
+
+    Returns
+    -------
+    npt.NDArray
+        The validated array, converted to a numpy array.
+    """
+    array: npt.NDArray = np.asarray(value)
+    if not np.issubdtype(array.dtype, np.number):
+        raise TypeError(f"{name} must be a numeric array-like object. Got {array.dtype.name}.")
+    if array.dtype == np.bool_:
+        raise TypeError(f"{name} must not be a boolean array-like object.")
+    if not np.all(a=np.isfinite(a=array)):
+        raise ValueError(f"{name} must contain only finite values; not NaN or Inf.")
+    return array
 
 def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt.NDArray:
     """
@@ -56,6 +93,8 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
 
     Raises
     ------
+    TypeError
+        If *value* is not a numeric array-like object.
     ValueError
         If *value* is not a 1-D or 2-D array-like object, if it does not have exactly *n_categories* columns, or if it
         contains negative values.
@@ -65,7 +104,7 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
     npt.NDArray
         The validated array, converted to a numpy array.
     """
-    array: npt.NDArray = np.asarray(value)
+    array: npt.NDArray = validate_finite_array(name=name, value=value)
     if array.ndim == 1:
         array = np.expand_dims(a=array, axis=0)
     elif array.ndim != 2:
@@ -76,7 +115,7 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
         raise ValueError(f"{name} must contain non-negative values.")
     return array
 
-def validate_probability_batch(name: str, value: Any, n_categories: int) -> npt.NDArray:
+def validate_probability_batch(name: str, value: Any, n_categories: int) -> FloatArray:
     """
     Check that the given value is a non-negative 1-D or 2-D array-like object representing a probability distribution
     or a batch of probability distributions.
@@ -93,6 +132,8 @@ def validate_probability_batch(name: str, value: Any, n_categories: int) -> npt.
 
     Raises
     ------
+    TypeError
+        If *value* is not a numeric array-like object.
     ValueError
         If *value* is not a 1-D or 2-D array-like object, if it does not have exactly *n_categories* columns, if it
         contains negative values, or if the rows do not sum to one.
@@ -105,9 +146,9 @@ def validate_probability_batch(name: str, value: Any, n_categories: int) -> npt.
     array: npt.NDArray = validate_non_negative_batch(name=name, value=value, n_categories=n_categories)
     if not np.allclose(a=np.sum(a=array, axis=1), b=1.0, atol=FLOAT_TOL):
         raise ValueError(f"{name} must contain probability distributions that sum to one in each row.")
-    return array
+    return array.astype(dtype=FloatDType)
 
-def validate_histogram_batch(name: str, value: Any, n_categories: int, histogram_size: int) -> npt.NDArray:
+def validate_histogram_batch(name: str, value: Any, n_categories: int, histogram_size: int) -> IntArray:
     """
     Check that the given value is a non-negative 1-D or 2-D array-like object representing a histogram or a batch of
     histograms.
@@ -125,6 +166,8 @@ def validate_histogram_batch(name: str, value: Any, n_categories: int, histogram
 
     Raises
     ------
+    TypeError
+        If *value* is not a numeric array-like object.
     ValueError
         If *value* is not a 1-D or 2-D array-like object, if it does not have exactly *n_categories* columns, or if it
         contains negative values.
@@ -135,13 +178,16 @@ def validate_histogram_batch(name: str, value: Any, n_categories: int, histogram
         The validated histogram batch, converted to a numpy array.
     """
     array: npt.NDArray = validate_non_negative_batch(name=name, value=value, n_categories=n_categories)
-    if np.any(a=array.sum(axis=1) != histogram_size):
+    if not np.issubdtype(array.dtype, np.integer) and np.any(a=~np.equal(a=array, b=np.floor(a=array))):
+        raise ValueError(f"{name} must contain histograms with integer counts in each row.")
+    int_array: IntArray = array.astype(dtype=IntDType)
+    if np.any(a=int_array.sum(axis=1) != histogram_size):
         raise ValueError(f"{name} must contain histograms with exactly {histogram_size} samples in each row.")
-    return array
+    return int_array
 
-def validate_null_index_set(name: str, value: Any, n_nulls: int) -> set[int]:
+def validate_null_indices(name: str, value: Any, n_nulls: int) -> tuple[int, ...]:
     """
-    Check that the given value is a set of integers representing null indices.
+    Check that the given value is a sequence of integers representing null indices.
 
     Parameters
     ----------
@@ -155,17 +201,27 @@ def validate_null_index_set(name: str, value: Any, n_nulls: int) -> set[int]:
     Raises
     ------
     TypeError
-        If *value* is not a set of integers.
+        If *value* is not a sequence of integers.
     ValueError
-        If the set contains indices outside the range [1,n_nulls].
+        If the sequence contains indices outside the range [1,n_nulls].
+
+    Returns
+    -------
+    tuple[int]
+        A tuple of unique, validated indices.
     """
     if isinstance(value, int):
-        value_set: set[int] = {value}
+        value_seq: tuple[int] = (value,)
+    elif isinstance(value, (str, bytes)):
+        raise TypeError(f"{name} must be an integer or an iterable of integers. Got {type(value).__name__}.")
     else:
         try :
-            value_set = set(value)
+            value_seq = tuple(value)
         except TypeError:
-            raise TypeError(f"{name} must be an integer or a set of integers. Got {type(value).__name__}.")
-    for idx in value_set:
-        validate_int_value(name=f"{idx} in {name}", value=idx, min_value=1, max_value=n_nulls)
-    return value_set
+            raise TypeError(f"{name} must be an integer or an iterable of integers. Got {type(value).__name__}.")
+    value_list: list[int] = list()
+    for idx in value_seq:
+        if idx not in value_list:
+            value_list.append(validate_int_value(name=f"{idx} in {name}", value=idx, min_value=1, max_value=n_nulls))
+
+    return tuple(value_list)

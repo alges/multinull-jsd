@@ -14,9 +14,10 @@ Typical usage
 from multinull_jsd.null_structures import IndexedHypotheses
 from multinull_jsd.cdf_backends import CDF_BACKEND_FACTORY, MC_CDF_BACKENDS
 from multinull_jsd._validators import (
-validate_int_value, validate_histogram_batch, validate_probability_batch, validate_null_index_set
+    validate_int_value, validate_finite_array, validate_histogram_batch, validate_probability_batch,
+    validate_null_indices
 )
-from multinull_jsd.types import FloatArray, IntArray, FloatDType, IntDType
+from multinull_jsd.types import FloatArray, IntArray, FloatDType
 from typing import Optional, Sequence, overload
 
 import numpy.typing as npt
@@ -57,8 +58,10 @@ class MultiNullJSDTest:
         self._n: int = validate_int_value(name="evidence_size", value=evidence_size, min_value=1)
         self._k: int = validate_int_value(name="prob_dim", value=prob_dim, min_value=1)
 
-        if cdf_method not in CDF_BACKEND_FACTORY.keys():
-            raise ValueError(f"Invalid CDF method '{cdf_method}'. Must be one of {CDF_BACKEND_FACTORY.keys()}.")
+        if cdf_method not in CDF_BACKEND_FACTORY:
+            raise ValueError(
+                f"Invalid CDF method '{cdf_method!r}'. Must be one of {", ".join(sorted(CDF_BACKEND_FACTORY.keys()))}."
+            )
 
         if cdf_method in MC_CDF_BACKENDS:
             validate_int_value(name="mc_samples", value=mc_samples, min_value=1)
@@ -92,16 +95,20 @@ class MultiNullJSDTest:
         # Validation of the probability vector(s)
         prob_array: FloatArray = validate_probability_batch(
             name="prob_vector", value=prob_vector, n_categories=self._k
-        ).astype(dtype=FloatDType)
+        )
 
         # Validation of the target alpha(s)
-        target_alpha_vec: FloatArray = np.atleast_1d(target_alpha).astype(dtype=FloatDType)
+        target_alpha_vec: FloatArray = validate_finite_array(
+            name="target_alpha", value=np.atleast_1d(target_alpha)
+        ).astype(dtype=FloatDType)
         if target_alpha_vec.ndim != 1:
             raise ValueError("Target alpha must be a scalar or a 1-D sequence.")
         if target_alpha_vec.size == 1:
             target_alpha_vec = np.broadcast_to(array=target_alpha_vec, shape=(prob_array.shape[0],))
         elif target_alpha_vec.shape[0] != prob_array.shape[0]:
             raise ValueError("Target alpha vector and probability vector must have the same length.")
+        if np.any(a=target_alpha_vec < 0) or np.any(a=target_alpha_vec > 1):
+            raise ValueError("Target alpha values must lie in [0, 1].")
 
         raise NotImplementedError
 
@@ -115,7 +122,7 @@ class MultiNullJSDTest:
             Index or sequence of indices of null hypotheses to remove. Must be valid indices of the current nulls. The
             indexing is one-based, i.e., the first null hypothesis has index 1.
         """
-        null_index_set: set[int] = validate_null_index_set(
+        null_index_tuple: tuple[int, ...] = validate_null_indices(
             name="null_index", value=null_index, n_nulls=len(self._nulls)
         )
         raise NotImplementedError
@@ -151,8 +158,8 @@ class MultiNullJSDTest:
             respective null hypothesis. If the input is a batch, the output will have shape ``(m,L)``.
         """
         query_array: IntArray = validate_histogram_batch(
-            name="query", value=hist_query, n_categories=self._k, histogram_size=self._n
-        ).astype(dtype=IntDType)
+            name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n
+        )
         raise NotImplementedError
 
     def infer_decisions(self, hist_query: npt.ArrayLike) -> int | npt.NDArray[int]:
@@ -179,8 +186,8 @@ class MultiNullJSDTest:
             If the input is a batch, the output will be a 1-D array of integers.
         """
         query_array: IntArray = validate_histogram_batch(
-            name="query", value=hist_query, n_categories=self._k, histogram_size=self._n
-        ).astype(dtype=IntDType)
+            name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n
+        )
         raise NotImplementedError
 
     @overload
@@ -205,7 +212,7 @@ class MultiNullJSDTest:
             specified null hypothesis. If a single index is provided, a scalar float is returned; if a sequence of
             indices is provided, a 1-D array of floats is returned.
         """
-        null_index_set: set[int] = validate_null_index_set(
+        null_indices: tuple[int, ...] = validate_null_indices(
             name="null_index", value=null_index, n_nulls=len(self._nulls)
         )
         raise NotImplementedError
@@ -227,9 +234,7 @@ class MultiNullJSDTest:
             Estimated maximum Type-II error probability over all null hypotheses. If the input is a single histogram,
             a scalar float is returned; if the input is a batch, a 1-D array of floats is returned.
         """
-        query_array: FloatArray = validate_probability_batch(
-            name="prob_vector", value=prob_query, n_categories=self._k
-        ).astype(dtype=FloatDType)
+        query_array: FloatArray = validate_probability_batch(name="prob_query", value=prob_query, n_categories=self._k)
         raise NotImplementedError
 
     def get_fwer(self) -> float:
