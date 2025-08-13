@@ -29,6 +29,7 @@ class CDFBackend(ABC):
         If ``evidence_size`` is not a positive integer.
     """
     def __init__(self, evidence_size: int) -> None:
+        # TODO: Create base initialization routine
         raise NotImplementedError
 
     @property

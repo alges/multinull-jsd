@@ -3,8 +3,8 @@
 side-effect-free checks** so that importing it never triggers heavy numerical work (NumPy is imported lazily and only
 for datatype inspection).
 """
-from multinull_jsd.types import FloatArray, FloatDType, IntArray, IntDType, ScalarInt
-from typing import Any, Optional
+from multinull_jsd.types import FloatArray, FloatDType, IntArray, IntDType, ScalarInt, ScalarFloat
+from typing import Any, Optional, overload
 
 import numpy.typing as npt
 import numpy as np
@@ -13,6 +13,49 @@ import numbers
 
 
 FLOAT_TOL: float = 1e-12
+
+@overload
+def validate_bounded_value(
+    name: str, value: ScalarInt, min_value: Optional[int] = None, max_value: Optional[int] = None
+) -> ScalarInt: ...
+@overload
+def validate_bounded_value(
+    name: str, value: ScalarFloat, min_value: Optional[float] = None, max_value: Optional[float] = None
+) -> ScalarFloat: ...
+
+def validate_bounded_value(
+    name: str, value: ScalarInt | ScalarFloat, min_value: Optional[float] = None, max_value: Optional[float] = None
+) -> ScalarInt | ScalarFloat:
+    """
+    Check that the given value is a real number within the defined bounds (inclusive).
+
+    Parameters
+    ----------
+    name
+        Human-readable name of the parameter – used verbatim in the error message to ease debugging.
+    value
+        Object to validate. Usually the raw argument received by a public API.
+    min_value
+        Optional lower bound (inclusive). If not provided, no lower bound is enforced.
+    max_value
+        Optional upper bound (inclusive). If not provided, no upper bound is enforced.
+
+    Raises
+    ------
+    TypeError
+        If *value* is not a number.
+    ValueError
+        If *value* is outside the defined bounds or if the bounds are inconsistent (e.g., `min_value > max_value`).
+    """
+    if not isinstance(value, numbers.Real) or isinstance(value, bool):
+        raise TypeError(f"{name} must be a real number. Got {type(value).__name__}.")
+    if min_value is not None and max_value is not None and min_value > max_value:
+        raise ValueError(f"Inconsistent bounds for {name}: min_value ({min_value}) > max_value ({max_value}).")
+    if min_value is not None and value < min_value:
+        raise ValueError(f"{name} must be at least {min_value}. Got {value!r}.")
+    if max_value is not None and value > max_value:
+        raise ValueError(f"{name} must be at most {max_value}. Got {value!r}.")
+    return value
 
 def validate_int_value(name: str, value: Any, min_value: Optional[int] = None, max_value: Optional[int] = None) -> int:
     """
@@ -34,19 +77,12 @@ def validate_int_value(name: str, value: Any, min_value: Optional[int] = None, m
     TypeError
         If *value* is not an ``int``.
     ValueError
-        If *value* is outside the defined bounds.
+        If *value* is outside the defined bounds (or if the bounds are inconsistent, e.g., `min_value > max_value`).
     """
-    if min_value is not None and max_value is not None and min_value > max_value:
-        raise ValueError(f"Inconsistent bounds for {name}: min_value ({min_value}) > max_value ({max_value}).")
     if not isinstance(value, numbers.Integral) or isinstance(value, bool):
         # bool is a subclass of int, so we need to exclude it explicitly
         raise TypeError(f"{name} must be an integer. Got {type(value).__name__}.")
-    value = int(value)
-    if min_value is not None and value < min_value:
-        raise ValueError(f"{name} must be at least {min_value}. Got {value!r}.")
-    if max_value is not None and value > max_value:
-        raise ValueError(f"{name} must be at most {max_value}. Got {value!r}.")
-    return value
+    return validate_bounded_value(name=name, value=int(value), min_value=min_value, max_value=max_value)
 
 def validate_finite_array(name: str, value: Any) -> npt.NDArray:
     """

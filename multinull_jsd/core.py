@@ -69,7 +69,7 @@ class MultiNullJSDTest:
 
         # Initialization of container for null hypotheses
         self._nulls: IndexedHypotheses = IndexedHypotheses(
-            cdf_backend=CDF_BACKEND_FACTORY[cdf_method](self._n, mc_samples, seed)
+            cdf_backend=CDF_BACKEND_FACTORY[cdf_method](self._n, mc_samples, seed), prob_dim=self._k
         )
 
         raise NotImplementedError

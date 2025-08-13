@@ -20,8 +20,11 @@ class IndexedHypotheses:
     ----------
     cdf_backend
         Back-end shared by all contained null hypotheses.
+    prob_dim
+        Number of dimensions in the probability vector (i.e., the number of categories in the multinomial
+        distribution).
     """
-    def __init__(self, cdf_backend: CDFBackend) -> None:
+    def __init__(self, cdf_backend: CDFBackend, prob_dim: int) -> None:
         raise NotImplementedError
 
     def add_null(self, prob_vector: FloatArray, target_alpha: float) -> ScalarInt:
