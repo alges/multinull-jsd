@@ -123,9 +123,7 @@ class MultiNullJSDTest:
             Index or sequence of indices of null hypotheses to remove. Must be valid indices of the current nulls. The
             indexing is one-based, i.e., the first null hypothesis has index 1.
         """
-        null_index_tuple: tuple[ScalarInt, ...] = validate_null_indices(
-            name="null_index", value=null_index, n_nulls=len(self._nulls)
-        )
+        validate_null_indices(name="null_index", value=null_index, n_nulls=len(self._nulls))
         raise NotImplementedError
 
     def get_nulls(self) -> IndexedHypotheses:
@@ -158,9 +156,7 @@ class MultiNullJSDTest:
             ``(L,)``, where ``L`` is the number of null hypotheses. Each entry corresponds to the p-value for the
             respective null hypothesis. If the input is a batch, the output will have shape ``(m,L)``.
         """
-        query_array: IntArray = validate_histogram_batch(
-            name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n
-        )
+        validate_histogram_batch(name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n)
         raise NotImplementedError
 
     def infer_decisions(self, hist_query: npt.ArrayLike) -> ScalarInt | IntArray:
@@ -186,9 +182,7 @@ class MultiNullJSDTest:
             respective histogram in the batch. If the input is a single histogram, the output will be a scalar integer.
             If the input is a batch, the output will be a 1-D array of integers.
         """
-        query_array: IntArray = validate_histogram_batch(
-            name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n
-        )
+        validate_histogram_batch(name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n)
         raise NotImplementedError
 
     @overload
@@ -213,9 +207,7 @@ class MultiNullJSDTest:
             specified null hypothesis. If a single index is provided, a scalar float is returned; if a sequence of
             indices is provided, a 1-D array of floats is returned.
         """
-        null_indices: tuple[ScalarInt, ...] = validate_null_indices(
-            name="null_index", value=null_index, n_nulls=len(self._nulls)
-        )
+        validate_null_indices(name="null_index", value=null_index, n_nulls=len(self._nulls))
         raise NotImplementedError
 
     def get_beta(self, prob_query: npt.ArrayLike) -> ScalarFloat | FloatArray:
@@ -235,7 +227,7 @@ class MultiNullJSDTest:
             Estimated maximum Type-II error probability over all null hypotheses. If the input is a single histogram,
             a scalar float is returned; if the input is a batch, a 1-D array of floats is returned.
         """
-        query_array: FloatArray = validate_probability_batch(name="prob_query", value=prob_query, n_categories=self._k)
+        validate_probability_batch(name="prob_query", value=prob_query, n_categories=self._k)
         raise NotImplementedError
 
     def get_fwer(self) -> ScalarFloat:

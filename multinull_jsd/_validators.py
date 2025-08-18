@@ -156,6 +156,38 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
         raise ValueError(f"{name} must contain non-negative values.")
     return array
 
+def validate_probability_vector(name: str, value: Any, n_categories: int) -> FloatArray:
+    """
+    Check that the given value is a non-negative 1-D array-like object representing a probability distribution.
+
+    Parameters
+    ----------
+    name
+        Human-readable name of the parameter – used verbatim in the error message to ease debugging.
+    value
+        Object to validate. Usually the raw argument received by a public API.
+    n_categories
+        Expected number of categories (entries) in the probability distribution. The array must have exactly this many
+        entries.
+
+    Raises
+    ------
+    TypeError
+        If *value* is not a numeric array-like object.
+    ValueError
+        If *value* is not a 1-D array-like object, if it does not have exactly *n_categories* entries, if it contains
+        negative values, or if it does not sum to one.
+
+    Returns
+    -------
+    FloatArray
+        The validated probability vector, converted to a numpy array.
+    """
+    value = validate_probability_batch(name=name, value=value, n_categories=n_categories)
+    if value.shape[0] != 1:
+        raise ValueError(f"{name} must be a 1-D array-like object.")
+    return value[0]
+
 def validate_probability_batch(name: str, value: Any, n_categories: int) -> FloatArray:
     """
     Check that the given value is a non-negative 1-D or 2-D array-like object representing a probability distribution
@@ -181,7 +213,7 @@ def validate_probability_batch(name: str, value: Any, n_categories: int) -> Floa
 
     Returns
     -------
-    npt.NDArray
+    FloatArray
         The validated probability batch, converted to a numpy array.
     """
     n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
@@ -280,8 +312,52 @@ def validate_null_indices(name: str, value: Any, n_nulls: int) -> tuple[ScalarIn
         except TypeError:
             raise TypeError(f"{name} must be an integer or an iterable of integers. Got {type(value).__name__}.")
     value_list: list[int] = list()
+    idx: int
     for idx in value_seq:
         if idx not in value_list:
             value_list.append(validate_int_value(name=f"{idx} in {name}", value=idx, min_value=1, max_value=n_nulls))
 
     return tuple(value_list)
+
+def validate_null_slice(name: str, value: Any, n_nulls: int) -> slice:
+    """
+    Check that the given value is a slice object representing null indices.
+
+    Parameters
+    ----------
+    name
+        Human-readable name of the parameter – used verbatim in the error message to ease debugging.
+    value
+        Object to validate. Usually the raw argument received by a public API.
+    n_nulls
+        Total number of null hypotheses in the container. The slice must be valid within the range [1,n_nulls].
+
+    Raises
+    ------
+    TypeError
+        If *value* is not a slice object.
+    ValueError
+        If the slice is invalid or contains indices outside the range [1,n_nulls].
+
+    Returns
+    -------
+    slice
+        A validated slice object with adjusted start and stop indices.
+    """
+    n_nulls = validate_int_value(name="n_nulls", value=n_nulls, min_value=0)
+    if n_nulls == 0:
+        raise ValueError("There should be at least one null hypothesis in the container (n_nulls > 0).")
+    if not isinstance(value, slice):
+        raise TypeError(f"{name} must be a slice object. Got {type(value).__name__}.")
+
+    start: int = 1 if value.start is None else validate_int_value(
+        name=f"{name}.start", value=value.start, min_value=1, max_value=n_nulls
+    )
+    stop: int = n_nulls + 1 if value.stop is None else validate_int_value(
+        name=f"{name}.stop", value=value.stop, min_value=1, max_value=n_nulls
+    )
+    step: int = 1 if value.step is None else validate_int_value(
+        name=f"{name}.step", value=value.step, min_value=1
+    )
+
+    return slice(start, stop, step)
