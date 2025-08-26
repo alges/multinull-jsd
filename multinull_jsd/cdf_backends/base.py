@@ -81,3 +81,7 @@ class CDFBackend(ABC):
         ValueError
             If *prob_vector* is not 1-D, contains negative values, or does not sum to one.
         """
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        raise NotImplementedError

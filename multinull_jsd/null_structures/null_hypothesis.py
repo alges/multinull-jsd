@@ -50,9 +50,7 @@ class NullHypothesis:
             raise TypeError("cdf_backend must be an instance of CDFBackend.")
 
         prob_vector = np.asarray(prob_vector)
-        self._p: FloatArray = validate_probability_vector(
-            name="prob_vector", value=prob_vector, n_categories=prob_vector.shape[-1]
-        )
+        self._p: FloatArray = validate_probability_vector(name="prob_vector", value=prob_vector, n_categories=None)
         self._backend: CDFBackend = cdf_backend
         self._alpha: Optional[ScalarFloat] = None
 

@@ -118,7 +118,7 @@ def validate_finite_array(name: str, value: Any) -> npt.NDArray:
         raise ValueError(f"{name} must contain only finite values; not NaN or Inf.")
     return array
 
-def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt.NDArray:
+def validate_non_negative_batch(name: str, value: Any, n_categories: Optional[int]) -> npt.NDArray:
     """
     Check that the given value is a non-negative 1-D or 2-D array-like object.
 
@@ -129,7 +129,8 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
     value
         Object to validate. Usually the raw argument received by a public API.
     n_categories
-        Expected number of categories (columns) in the array. Every row must have exactly this many entries.
+        Expected number of categories (columns) in the array. Every row must have exactly this many entries. If not
+        provided, the number of categories is not checked.
 
     Raises
     ------
@@ -144,19 +145,20 @@ def validate_non_negative_batch(name: str, value: Any, n_categories: int) -> npt
     npt.NDArray
         The validated array, converted to a numpy array.
     """
-    n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
     array: npt.NDArray = validate_finite_array(name=name, value=value)
     if array.ndim == 1:
         array = np.expand_dims(a=array, axis=0)
     elif array.ndim != 2:
         raise ValueError(f"{name} must be a 1-D or 2-D array-like object.")
-    if array.shape[1] != n_categories:
-        raise ValueError(f"{name} must have exactly {n_categories} columns. Got {array.shape[1]}.")
+    if n_categories is not None:
+        n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
+        if array.shape[1] != n_categories:
+            raise ValueError(f"{name} must have exactly {n_categories} columns. Got {array.shape[1]}.")
     if np.any(a=array < 0):
         raise ValueError(f"{name} must contain non-negative values.")
     return array
 
-def validate_probability_vector(name: str, value: Any, n_categories: int) -> FloatArray:
+def validate_probability_vector(name: str, value: Any, n_categories: Optional[int]) -> FloatArray:
     """
     Check that the given value is a non-negative 1-D array-like object representing a probability distribution.
 
@@ -168,7 +170,7 @@ def validate_probability_vector(name: str, value: Any, n_categories: int) -> Flo
         Object to validate. Usually the raw argument received by a public API.
     n_categories
         Expected number of categories (entries) in the probability distribution. The array must have exactly this many
-        entries.
+        entries. If not provided, the number of categories is not checked.
 
     Raises
     ------
@@ -183,12 +185,14 @@ def validate_probability_vector(name: str, value: Any, n_categories: int) -> Flo
     FloatArray
         The validated probability vector, converted to a numpy array.
     """
+    if n_categories is not None:
+        n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
     value = validate_probability_batch(name=name, value=value, n_categories=n_categories)
     if value.shape[0] != 1:
         raise ValueError(f"{name} must be a 1-D array-like object.")
     return value[0]
 
-def validate_probability_batch(name: str, value: Any, n_categories: int) -> FloatArray:
+def validate_probability_batch(name: str, value: Any, n_categories: Optional[int]) -> FloatArray:
     """
     Check that the given value is a non-negative 1-D or 2-D array-like object representing a probability distribution
     or a batch of probability distributions.
@@ -201,7 +205,7 @@ def validate_probability_batch(name: str, value: Any, n_categories: int) -> Floa
         Object to validate. Usually the raw argument received by a public API.
     n_categories
         Expected number of categories (columns) in the probability distribution. Every row must have exactly this many
-        entries.
+        entries. If not provided, the number of categories is not checked.
 
     Raises
     ------
@@ -216,7 +220,8 @@ def validate_probability_batch(name: str, value: Any, n_categories: int) -> Floa
     FloatArray
         The validated probability batch, converted to a numpy array.
     """
-    n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
+    if n_categories is not None:
+        n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
     array: npt.NDArray = validate_non_negative_batch(name=name, value=value, n_categories=n_categories)
     if not np.allclose(a=np.sum(a=array, axis=1), b=1.0, atol=FLOAT_TOL, rtol=0.0):
         raise ValueError(f"{name} must contain probability distributions that sum to one in each row.")
