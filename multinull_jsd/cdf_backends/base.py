@@ -7,9 +7,14 @@ a given null probability vector.
 Design contract
 ---------------
 * **Statelessness per call** – the object may cache expensive pre-computations (e.g. multinomial coefficient tables)
-  but ``get_cdf`` must allow clean-calls.
+  but ``get_cdf`` must allow clean calls.
 * **Thread-safety** – subclasses should not keep mutable state that changes during evaluation of the returned callable.
+* **CDF properties** – the callable returned by ``get_cdf`` MUST be:
+  - vectorised (broadcasts over ``tau``),
+  - monotone non-decreasing in ``tau``,
+  - clipped to ``[0, 1]``.
 """
+from multinull_jsd._validators import validate_int_value
 from multinull_jsd.types import FloatArray, CDFCallable
 from abc import ABC, abstractmethod
 
@@ -25,11 +30,14 @@ class CDFBackend(ABC):
 
     Raises
     ------
+    TypeError
+        If ``evidence_size`` is not an integer.
     ValueError
-        If ``evidence_size`` is not a positive integer.
+        If ``evidence_size`` is not positive.
     """
     def __init__(self, evidence_size: int) -> None:
         # TODO: Create base initialization routine
+        validate_int_value(name="evidence_size", value=evidence_size, min_value=1)
         raise NotImplementedError
 
     @property
@@ -68,6 +76,8 @@ class CDFBackend(ABC):
 
         Raises
         ------
+        TypeError
+            If *prob_vector* is not a numeric array-like object.
         ValueError
             If *prob_vector* is not 1-D, contains negative values, or does not sum to one.
         """
