@@ -12,7 +12,7 @@ Typical usage
 >>> decisions = test.infer_decisions(h)  # Array of decisions (1 or 2 for each null hypothesis, -1 for the alternative)
 """
 from multinull_jsd.null_structures import IndexedHypotheses
-from multinull_jsd.cdf_backends import CDF_BACKEND_FACTORY, MC_CDF_BACKENDS
+from multinull_jsd.cdf_backends import NON_MC_CDF_BACKEND_FACTORY, MC_CDF_BACKEND_FACTORY, CDFBackend
 from multinull_jsd._validators import (
     validate_int_value, validate_finite_array, validate_histogram_batch, validate_probability_batch,
     validate_null_indices
@@ -58,19 +58,21 @@ class MultiNullJSDTest:
         self._n: int = validate_int_value(name="evidence_size", value=evidence_size, min_value=1)
         self._k: int = validate_int_value(name="prob_dim", value=prob_dim, min_value=1)
 
-        if cdf_method not in CDF_BACKEND_FACTORY:
-            raise ValueError(
-                f"Invalid CDF method '{cdf_method!r}'. Must be one of {", ".join(sorted(CDF_BACKEND_FACTORY.keys()))}."
-            )
-
-        if cdf_method in MC_CDF_BACKENDS:
+        self._backend: CDFBackend
+        if cdf_method in NON_MC_CDF_BACKEND_FACTORY:
+            self._backend = NON_MC_CDF_BACKEND_FACTORY[cdf_method](self._n)
+        elif cdf_method in MC_CDF_BACKEND_FACTORY:
             validate_int_value(name="mc_samples", value=mc_samples, min_value=1)
             validate_int_value(name="seed", value=seed, min_value=0)
+            self._backend = MC_CDF_BACKEND_FACTORY[cdf_method](self._n, mc_samples, seed)
+        else:
+            raise ValueError(
+                f"Invalid CDF method '{cdf_method!r}'. Must be one of "
+                f"{', '.join(sorted(NON_MC_CDF_BACKEND_FACTORY.keys() | MC_CDF_BACKEND_FACTORY.keys()))}."
+            )
 
         # Initialization of container for null hypotheses
-        self._nulls: IndexedHypotheses = IndexedHypotheses(
-            cdf_backend=CDF_BACKEND_FACTORY[cdf_method](self._n, mc_samples, seed), prob_dim=self._k
-        )
+        self._nulls: IndexedHypotheses = IndexedHypotheses(cdf_backend=self._backend, prob_dim=self._k)
 
         raise NotImplementedError
 

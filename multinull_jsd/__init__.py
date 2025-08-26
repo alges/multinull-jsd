@@ -36,8 +36,8 @@ def available_cdf_backends() -> tuple[str, ...]:
     tuple of str
         Names of available CDF backends.
     """
-    from .cdf_backends import CDF_BACKEND_FACTORY
-    return tuple(sorted(CDF_BACKEND_FACTORY.keys()))
+    from .cdf_backends import NON_MC_CDF_BACKEND_FACTORY, MC_CDF_BACKEND_FACTORY
+    return tuple(sorted(NON_MC_CDF_BACKEND_FACTORY.keys() | MC_CDF_BACKEND_FACTORY.keys()))
 
 def __getattr__(name: str) -> Any:
     if name == "MultiNullJSDTest":
