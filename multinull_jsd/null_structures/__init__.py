@@ -9,8 +9,28 @@ re-exports everything needed for typical workflows. Still, advanced users may im
 pipelines:
 
 >>> from multinull_jsd.null_structures import IndexedHypotheses, NullHypothesis
+
+Public re-exports
+-----------------
+- ``IndexedHypotheses`` – container that maintains 1-based consecutive indices
+- ``NullHypothesis`` – lightweight holder for a single null hypothesis
 """
-from .indexed_hypotheses import IndexedHypotheses
-from .null_hypothesis import NullHypothesis
+from typing import Any, TYPE_CHECKING
 
 __all__ = ["IndexedHypotheses", "NullHypothesis"]
+
+if TYPE_CHECKING:
+    from .indexed_hypotheses import IndexedHypotheses
+    from .null_hypothesis import NullHypothesis
+
+def __getattr__(name: str) -> Any:
+    if name == "IndexedHypotheses":
+        from .indexed_hypotheses import IndexedHypotheses as _IndexedHypotheses
+        return _IndexedHypotheses
+    if name == "NullHypothesis":
+        from .null_hypothesis import NullHypothesis as _NullHypothesis
+        return _NullHypothesis
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | set(__all__))
