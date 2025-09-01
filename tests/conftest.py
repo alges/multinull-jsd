@@ -1,4 +1,7 @@
-# TODO: Remove the type-ignore comments when mypy understands hypothesis better.
+"""
+Configuration and fixtures for tests.
+"""
+# TODO: Provide searchstrategy return types when mypy supports it.
 from multinull_jsd.cdf_backends import CDFBackend
 from hypothesis.extra import numpy as hnp
 from hypothesis import strategies as st
@@ -26,7 +29,7 @@ class CDFCallable(Protocol):
 
 
 @st.composite
-def _p_vector(draw: st.DrawFn, k: int = 3) -> FloatArray:
+def _p_vector(draw: st.DrawFn, k: int = 3):
     """
     Hypothesis strategy: generate a random probability vector of dimension k.
     """
@@ -43,7 +46,7 @@ def _p_vector(draw: st.DrawFn, k: int = 3) -> FloatArray:
 
 
 @st.composite
-def _p_batch(draw: st.DrawFn, m: int, k: int = 3) -> FloatArray:
+def _p_batch(draw: st.DrawFn, m: int, k: int = 3):
     """
     Hypothesis strategy: generate a batch of m random probability vectors of dimension k.
     """
@@ -51,7 +54,7 @@ def _p_batch(draw: st.DrawFn, m: int, k: int = 3) -> FloatArray:
 
 
 @st.composite
-def _histogram(draw: st.DrawFn, n: int = 10, k: int = 3) -> IntArray:
+def _histogram(draw: st.DrawFn, n: int = 10, k: int = 3):
     """
     Hypothesis strategy: generate a random histogram of dimension k summing to n.
     """
@@ -63,7 +66,7 @@ def _histogram(draw: st.DrawFn, n: int = 10, k: int = 3) -> IntArray:
 
 
 @st.composite
-def _histogram_batch(draw: st.DrawFn, m: int, n: int = 10, k: int = 3) -> IntArray:
+def _histogram_batch(draw: st.DrawFn, m: int, n: int = 10, k: int = 3):
     """
     Hypothesis strategy: generate a batch of m random histograms of dimension k summing to n.
     """
@@ -106,7 +109,7 @@ def k_default() -> int:
     return 3
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def n_default() -> int:
     """
     Default number of samples for tests.

@@ -173,8 +173,8 @@ def validate_probability_vector(name: str, value: Any, n_categories: Optional[in
     TypeError
         If *value* is not a numeric array-like object.
     ValueError
-        If *value* is not a 1-D array-like object, if it does not have exactly *n_categories* entries, if it contains
-        negative values, or if it does not sum to one.
+        If *value* is not a 1-D array-like object ((k, ) or (1, k) shaped), if it does not have exactly *n_categories*
+        entries, if it contains negative values, or if it does not sum to one.
 
     Returns
     -------
@@ -254,21 +254,14 @@ def validate_histogram_batch(name: str, value: Any, n_categories: int, histogram
     npt.NDArray
         The validated histogram batch, converted to a numpy array.
     """
-    type_limit: int = np.iinfo(IntDType).max
     n_categories = validate_int_value(name="n_categories", value=n_categories, min_value=1)
-    histogram_size = validate_int_value(
-        name="histogram_size", value=histogram_size, min_value=1, max_value=int(type_limit)
-    )
+    histogram_size = validate_int_value(name="histogram_size", value=histogram_size, min_value=1)
     array: npt.NDArray = validate_non_negative_batch(name=name, value=value, n_categories=n_categories)
     if (
         not np.issubdtype(array.dtype, np.integer)
         and np.any(a=~np.isclose(a=array, b=np.floor(array), atol=FLOAT_TOL, rtol=0.0))
     ):
         raise ValueError(f"{name} must contain histograms with integer counts in each row.")
-    if np.any(a=array > type_limit):
-        raise ValueError(
-            f"{name} must contain histograms with counts that fit into {IntDType.__name__} (max {type_limit})."
-        )
     int_array: IntArray = array.astype(dtype=IntDType)
     if np.any(a=int_array.sum(axis=1) != histogram_size):
         raise ValueError(f"{name} must contain histograms with exactly {histogram_size} samples in each row.")

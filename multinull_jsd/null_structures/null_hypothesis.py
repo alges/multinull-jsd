@@ -12,7 +12,7 @@ backends.
 """
 from multinull_jsd.cdf_backends import CDFBackend
 from multinull_jsd._validators import validate_bounded_value, validate_probability_vector, validate_histogram_batch
-from multinull_jsd.types import FloatArray, ScalarFloat
+from multinull_jsd.types import FloatArray, ScalarFloat, IntArray
 from typing import Any, Optional
 
 import numpy.typing as npt
@@ -97,7 +97,7 @@ class NullHypothesis:
 
         raise NotImplementedError
 
-    def infer_p_value(self, query: FloatArray) -> ScalarFloat | FloatArray:
+    def infer_p_value(self, query: IntArray) -> ScalarFloat | FloatArray:
         """
         Compute p-value(s) for a histogram or batch of histograms.
 
