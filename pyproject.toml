@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multinull-jsd"
+version = "0.1.0"
+description = "Multi-Null Jensen–Shannon Distance (JSd) hypothesis test."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{ name = "ALGES", email = "contacto@alges.cl" }]
+keywords = ["statistics", "hypothesis-testing", "multinomial", "Jensen-Shannon", "information-theory"]
+classifiers = [
+  "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only",
+  "Operating System :: OS Independent", "Typing :: Typed"
+]
+
+dependencies = [
+  "numpy>=1.24"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1", "hypothesis>=6.88", "mypy>=1.5", "ruff>=0.4", "pre-commit>=3.6"]
+docs = [
+  "sphinx>=7.2", "furo>=2024.1.29", "myst-parser>=2.0", "sphinx-autodoc-typehints>=2.0", "sphinx-copybutton>=0.5.2"
+]
+
+[tool.setuptools.packages.find]
+include = ["multinull_jsd*"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+src = ["multinull_jsd", "tests"]
+fix = false
+
+[tool.ruff.lint]
+select = ["E", "F"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_no_return = true
+warn_unreachable = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+pretty = true
+show_error_codes = true
