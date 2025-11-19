@@ -2,7 +2,7 @@
 Unit tests for the IndexedHypotheses class.
 """
 from multinull_jsd.null_structures import IndexedHypotheses, NullHypothesis
-from tests.conftest import TestCDFBackend, k_default, fake_backend, n_default  # noqa: F401
+from tests.conftest import TestCDFBackend
 
 from typing import TypeAlias
 import numpy.typing as npt
@@ -29,7 +29,7 @@ def test_indexed_hypotheses_init_rejects_non_integer_or_bool_prob_dim(fake_backe
     prob_dim must be an integer (bool/float rejected).
     """
     with pytest.raises(expected_exception=TypeError):
-        IndexedHypotheses(cdf_backend=fake_backend, prob_dim=True)  # type: ignore[arg-type]
+        IndexedHypotheses(cdf_backend=fake_backend, prob_dim=True)
     with pytest.raises(expected_exception=TypeError):
         IndexedHypotheses(cdf_backend=fake_backend, prob_dim=3.0)  # type: ignore[arg-type]
 
@@ -74,7 +74,7 @@ def test_add_null_validates_alpha_bounds(fake_backend: TestCDFBackend, k_default
     ih: IndexedHypotheses = IndexedHypotheses(cdf_backend=fake_backend, prob_dim=k_default)
     p: FloatArray = np.array(object=[0.5, 0.3, 0.2], dtype=np.float64)
     with pytest.raises(expected_exception=TypeError):
-        ih.add_null(prob_vector=p, target_alpha=True)  # type: ignore[arg-type]
+        ih.add_null(prob_vector=p, target_alpha=True)
     with pytest.raises(expected_exception=ValueError):
         ih.add_null(prob_vector=p, target_alpha=-1e-9)
     with pytest.raises(expected_exception=ValueError):
@@ -90,8 +90,8 @@ def test_add_null_returns_consecutive_one_based_indices(fake_backend: TestCDFBac
     assert len(ih) == 0
     p1: FloatArray = np.array(object=[0.5, 0.3, 0.2], dtype=np.float64)
     p2: FloatArray = np.array(object=[0.4, 0.4, 0.2], dtype=np.float64)
-    idx1: int = ih.add_null(prob_vector=p1, target_alpha=0.05)
-    idx2: int = ih.add_null(prob_vector=p2, target_alpha=0.01)
+    idx1: int = int(ih.add_null(prob_vector=p1, target_alpha=0.05))
+    idx2: int = int(ih.add_null(prob_vector=p2, target_alpha=0.01))
     assert idx1 == 1 and idx2 == 2
     assert len(ih) == 2
 
@@ -166,7 +166,7 @@ def test_contains_accepts_null_hypothesis_and_raw_vector(fake_backend: TestCDFBa
     """
     ih: IndexedHypotheses = IndexedHypotheses(cdf_backend=fake_backend, prob_dim=k_default)
     p: FloatArray = np.array(object=[0.5, 0.3, 0.2], dtype=np.float64)
-    idx: int = ih.add_null(prob_vector=p, target_alpha=0.05)
+    idx: int = int(ih.add_null(prob_vector=p, target_alpha=0.05))
     nh: NullHypothesis = ih[idx]
     assert nh in ih
     assert p in ih

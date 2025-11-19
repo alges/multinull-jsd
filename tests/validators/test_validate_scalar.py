@@ -4,7 +4,7 @@ Tests for the scalar validation functions in multinull_jsd._validators.
 # noinspection PyProtectedMember
 from multinull_jsd._validators import validate_bounded_value, validate_int_value
 from hypothesis import given, strategies as st
-from typing import TypeAlias, Optional, Any
+from typing import TypeAlias, Optional, Any, cast
 
 import numpy as np
 
@@ -28,7 +28,7 @@ def test_validate_bounded_value_accepts_reals_and_preserves_type(
     """
     Test that validate_bounded_value accepts valid inputs and preserves type.
     """
-    out: Number = validate_bounded_value(name="x", value=val, min_value=min_v, max_value=max_v)
+    out: Number = validate_bounded_value(name="x", value=cast(Any, val), min_value=min_v, max_value=max_v)
     assert float(out) == float(val)
     assert isinstance(out, expected_type)
 
@@ -59,7 +59,7 @@ def test_validate_bounded_value_out_of_bounds_raises(
     Test that validate_bounded_value raises ValueError for out-of-bounds values.
     """
     with pytest.raises(expected_exception=ValueError):
-        validate_bounded_value(name="x", value=val, min_value=min_v, max_value=max_v)
+        validate_bounded_value(name="x", value=cast(Any, val), min_value=min_v, max_value=max_v)
 
 
 @pytest.mark.parametrize(argnames="bad_number", argvalues=[True, np.bool_(True), "3", object()])
@@ -80,7 +80,7 @@ def test_validate_bounded_value_property_inclusive_range(v: Number, a: Number, b
     """
     Property: for integer v within inclusive [min,max], function returns Python int v.
     """
-    assert validate_bounded_value(name="x", value=v, min_value=v - a, max_value=v + b) == v
+    assert validate_bounded_value(name="x", value=cast(Any, v), min_value=v - a, max_value=v + b) == v
 
 
 @pytest.mark.parametrize(argnames="good_int", argvalues=[0, 1, -5, 123456789, np.int64(3), np.int32(-2)])

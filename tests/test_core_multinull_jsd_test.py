@@ -18,7 +18,7 @@ def test_init_rejects_non_integer_or_bool_evidence_size(k_default: int) -> None:
     evidence_size must be an integer (bool/float rejected).
     """
     with pytest.raises(expected_exception=TypeError):
-        MultiNullJSDTest(evidence_size=True, prob_dim=k_default)  # type: ignore[arg-type]
+        MultiNullJSDTest(evidence_size=True, prob_dim=k_default)
     with pytest.raises(expected_exception=TypeError):
         MultiNullJSDTest(evidence_size=10.0, prob_dim=k_default)  # type: ignore[arg-type]
 
@@ -28,9 +28,9 @@ def test_init_rejects_non_integer_or_bool_prob_dim(n_default: int) -> None:
     prob_dim must be an integer (bool/float rejected).
     """
     with pytest.raises(expected_exception=TypeError):
-        MultiNullJSDTest(evidence_size=n_default, prob_dim=True)   # type: ignore[arg-type]
+        MultiNullJSDTest(evidence_size=n_default, prob_dim=True)
     with pytest.raises(expected_exception=TypeError):
-        MultiNullJSDTest(evidence_size=n_default, prob_dim=3.5)    # type: ignore[arg-type]
+        MultiNullJSDTest(evidence_size=n_default, prob_dim=3.5)  # type: ignore[arg-type]
 
 
 def test_init_rejects_non_positive_evidence_size(k_default: int) -> None:

@@ -62,6 +62,3 @@ disallow_incomplete_defs = true
 disallow_untyped_defs = true
 pretty = true
 show_error_codes = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"

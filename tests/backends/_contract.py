@@ -1,5 +1,5 @@
 from multinull_jsd.cdf_backends import CDFBackend
-from tests.conftest import p_vector, n_default, prob_vec3_default
+from tests.conftest import p_vector
 from hypothesis import given
 from typing import Callable, TypeAlias
 

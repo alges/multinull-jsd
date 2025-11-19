@@ -20,7 +20,7 @@ def test_cdf_callable_protocol() -> None:
     Test that a sample function conforms to the CDFCallable protocol.
     """
     class SampleCDF:
-        def __call__(self, tau: ScalarFloat | FloatArray) -> ScalarFloat | FloatDType:
+        def __call__(self, tau: ScalarFloat | FloatArray) -> ScalarFloat | FloatArray:
             array: FloatArray = np.clip(np.asarray(tau, dtype=FloatDType), 0.0, 1.0)
             if np.isscalar(tau):
                 return float(array)

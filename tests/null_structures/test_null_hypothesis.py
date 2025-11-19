@@ -2,8 +2,8 @@
 Unit tests for the NullHypothesis class.
 """
 from multinull_jsd.null_structures import NullHypothesis
-from tests.conftest import TestCDFBackend, prob_vec3_default, fake_backend, n_default
-from typing import TypeAlias
+from tests.conftest import TestCDFBackend
+from typing import TypeAlias, cast
 
 import numpy.typing as npt
 import numpy as np
@@ -50,7 +50,7 @@ def test_set_target_alpha_rejects_non_real(prob_vec3_default: FloatArray, fake_b
     """
     nh: NullHypothesis = NullHypothesis(prob_vector=prob_vec3_default, cdf_backend=fake_backend)
     with pytest.raises(expected_exception=TypeError):
-        nh.set_target_alpha(target_alpha=True)  # type: ignore[arg-type]
+        nh.set_target_alpha(target_alpha=True)
     with pytest.raises(expected_exception=TypeError):
         nh.set_target_alpha(target_alpha=complex(1, 0))  # type: ignore[arg-type]
 
@@ -86,7 +86,7 @@ def test_get_jsd_threshold_success_path(prob_vec3_default: FloatArray, fake_back
     """
     nh: NullHypothesis = NullHypothesis(prob_vector=prob_vec3_default, cdf_backend=fake_backend)
     nh.set_target_alpha(target_alpha=0.1)
-    tau: float = nh.get_jsd_threshold()
+    tau: float | np.floating = nh.get_jsd_threshold()
     assert isinstance(tau, float)
     assert 0.0 <= tau <= 1.0
 
@@ -135,8 +135,8 @@ def test_infer_p_value_valid_inputs(
     batch: IntArray = np.array(
         object=[[n_default, 0, 0], [n_default - 1, 1, 0], [n_default - 2, 2, 0]], dtype=np.int64
     )
-    out_single: float = nh.infer_p_value(query=single)
-    out_batch: FloatArray = nh.infer_p_value(query=batch)
+    out_single: float = float(nh.infer_p_value(query=single))
+    out_batch: FloatArray = cast(FloatArray, nh.infer_p_value(query=batch))
     assert isinstance(out_single, float)
     assert isinstance(out_batch, np.ndarray) and out_batch.shape == (3,)
 
