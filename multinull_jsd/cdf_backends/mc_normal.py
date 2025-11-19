@@ -1,3 +1,6 @@
+"""
+Monte-Carlo CDF backend based on the Gaussian CLT approximation.
+"""
 from .base import CDFBackend
 
 from multinull_jsd._validators import validate_int_value, validate_probability_vector

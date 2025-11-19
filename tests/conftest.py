@@ -3,33 +3,18 @@ Configuration and fixtures for tests.
 """
 # TODO: Provide searchstrategy return types when mypy supports it.
 from multinull_jsd.cdf_backends import CDFBackend
+from multinull_jsd.types import CDFCallable, FloatArray, IntArray, ScalarFloat
 from hypothesis.extra import numpy as hnp
 from hypothesis import strategies as st
-from typing import Protocol, TypeAlias, runtime_checkable, overload
+from typing import overload, cast
 
-import numpy.typing as npt
 import numpy as np
 
 import pytest
 
-ScalarInt = int | np.integer
-ScalarFloat = float | np.floating
-
-IntArray: TypeAlias = npt.NDArray[np.int64]
-FloatArray: TypeAlias = npt.NDArray[np.float64]
-
-
-@runtime_checkable
-class CDFCallable(Protocol):
-    @overload
-    def __call__(self, tau: ScalarFloat) -> ScalarFloat: ...
-    @overload
-    def __call__(self, tau: npt.ArrayLike) -> FloatArray: ...
-    def __call__(self, tau: ScalarFloat | npt.ArrayLike) -> ScalarFloat | FloatArray: ...
-
 
 @st.composite
-def _p_vector(draw: st.DrawFn, k: int = 3):
+def _p_vector(draw: st.DrawFn, k: int = 3) -> FloatArray:
     """
     Hypothesis strategy: generate a random probability vector of dimension k.
     """
@@ -46,7 +31,7 @@ def _p_vector(draw: st.DrawFn, k: int = 3):
 
 
 @st.composite
-def _p_batch(draw: st.DrawFn, m: int, k: int = 3):
+def _p_batch(draw: st.DrawFn, m: int, k: int = 3) -> FloatArray:
     """
     Hypothesis strategy: generate a batch of m random probability vectors of dimension k.
     """
@@ -54,7 +39,7 @@ def _p_batch(draw: st.DrawFn, m: int, k: int = 3):
 
 
 @st.composite
-def _histogram(draw: st.DrawFn, n: int = 10, k: int = 3):
+def _histogram(draw: st.DrawFn, n: int = 10, k: int = 3) -> IntArray:
     """
     Hypothesis strategy: generate a random histogram of dimension k summing to n.
     """
@@ -66,7 +51,7 @@ def _histogram(draw: st.DrawFn, n: int = 10, k: int = 3):
 
 
 @st.composite
-def _histogram_batch(draw: st.DrawFn, m: int, n: int = 10, k: int = 3):
+def _histogram_batch(draw: st.DrawFn, m: int, n: int = 10, k: int = 3) -> IntArray:
     """
     Hypothesis strategy: generate a batch of m random histograms of dimension k summing to n.
     """
@@ -91,11 +76,15 @@ class TestCDFBackend(CDFBackend):
         return self._n
 
     def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
-        def cdf(tau: float | FloatArray) -> float | FloatArray:
+        @overload
+        def cdf(tau: ScalarFloat) -> ScalarFloat: ...
+        @overload
+        def cdf(tau: FloatArray) -> FloatArray: ...
+        def cdf(tau: ScalarFloat | FloatArray) -> ScalarFloat | FloatArray:
             if np.isscalar(tau):
                 return float(np.clip(tau, a_min=0.0, a_max=1.0))
             return np.clip(np.asarray(tau, dtype=np.float64), a_min=0.0, a_max=1.0)
-        return cdf
+        return cast(CDFCallable, cdf)
 
     def __repr__(self) -> str:
         return f"TestCDFBackend(evidence_size={self._n})"
@@ -118,7 +107,7 @@ def n_default() -> int:
 
 
 @pytest.fixture
-def prob_vec3_default():
+def prob_vec3_default() -> FloatArray:
     """
     Default 3-category probability vector for tests.
     """

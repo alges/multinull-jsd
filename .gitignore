@@ -1,5 +1,9 @@
+build
+
+.DS_Store
 .idea
 sandbox
 
 **/.hypothesis
+*.egg-info
 *.pyc

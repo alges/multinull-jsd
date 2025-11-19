@@ -28,7 +28,7 @@ ScalarFloat: TypeAlias = float | np.floating
 ScalarInt: TypeAlias = int | np.integer
 
 #: Type variable representing any numeric scalar type (float or int, Python or NumPy).
-TNumber: TypeVar = TypeVar("TNumber", float, np.floating, int, np.integer)
+TNumber = TypeVar("TNumber", float, np.floating, int, np.integer)
 
 
 @runtime_checkable
@@ -49,8 +49,8 @@ class CDFCallable(Protocol):
     @overload
     def __call__(self, tau: ScalarFloat) -> ScalarFloat: ...
     @overload
-    def __call__(self, tau: npt.ArrayLike) -> FloatArray: ...
-    def __call__(self, tau: ScalarFloat | npt.ArrayLike) -> ScalarFloat | FloatArray: ...
+    def __call__(self, tau: FloatArray) -> FloatArray: ...
+    def __call__(self, tau: ScalarFloat | FloatArray) -> ScalarFloat | FloatArray: ...
 
 
 __all__ = ["FloatDType", "IntDType", "FloatArray", "IntArray", "ScalarFloat", "ScalarInt", "TNumber", "CDFCallable"]

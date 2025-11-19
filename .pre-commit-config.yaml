@@ -1,0 +1,30 @@
+# .pre-commit-config.yaml
+repos:
+  # Ruff: lint + format
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.9
+    hooks:
+      - id: ruff
+        stages: [pre-commit]
+
+  # mypy: static typing
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - numpy
+          - pytest
+        stages: [pre-commit]
+
+  # pytest: run tests as a pre-commit hook (local hook)
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: python3 -m pytest -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-commit]
+        always_run: true

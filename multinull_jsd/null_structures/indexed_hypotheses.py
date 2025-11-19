@@ -14,7 +14,7 @@ from multinull_jsd.cdf_backends import CDFBackend
 from multinull_jsd._validators import (
     validate_int_value, validate_probability_vector, validate_bounded_value, validate_null_indices, validate_null_slice
 )
-from multinull_jsd.types import FloatArray, ScalarInt
+from multinull_jsd.types import ScalarInt
 from typing import Iterator, Iterable, Any, overload
 
 import numpy.typing as npt
@@ -76,18 +76,12 @@ class IndexedHypotheses:
             validate_null_indices(name="idx", value=idx, n_nulls=len(self), keep_duplicates=True)
         raise NotImplementedError
 
-    @overload
-    def __delitem__(self, idx: ScalarInt | slice | Iterable[ScalarInt]) -> None: ...
-
     def __delitem__(self, idx: Any) -> None:
         if isinstance(idx, slice):
             validate_null_slice(name="idx", value=idx, n_nulls=len(self))
         else:
             validate_null_indices(name="idx", value=idx, n_nulls=len(self), keep_duplicates=False)
         raise NotImplementedError
-
-    @overload
-    def __contains__(self, null_item: FloatArray | NullHypothesis) -> bool: ...
 
     def __contains__(self, null_item: Any) -> bool:
         if not isinstance(null_item, NullHypothesis):

@@ -62,9 +62,11 @@ class MultiNullJSDTest:
         if cdf_method in NON_MC_CDF_BACKEND_FACTORY:
             self._backend = NON_MC_CDF_BACKEND_FACTORY[cdf_method](self._n)
         elif cdf_method in MC_CDF_BACKEND_FACTORY:
-            validate_int_value(name="mc_samples", value=mc_samples, min_value=1)
-            validate_int_value(name="seed", value=seed, min_value=0)
-            self._backend = MC_CDF_BACKEND_FACTORY[cdf_method](self._n, mc_samples, seed)
+            self._backend = MC_CDF_BACKEND_FACTORY[cdf_method](
+                self._n,
+                validate_int_value(name="mc_samples", value=mc_samples, min_value=1),
+                validate_int_value(name="seed", value=seed, min_value=0)
+            )
         else:
             raise ValueError(
                 f"Invalid CDF method '{cdf_method!r}'. Must be one of "
@@ -102,7 +104,7 @@ class MultiNullJSDTest:
 
         # Validation of the target alpha(s)
         target_alpha_vec: FloatArray = validate_finite_array(
-            name="target_alpha", value=np.atleast_1d(target_alpha)
+            name="target_alpha", value=np.atleast_1d(np.asarray(target_alpha, dtype=float))
         ).astype(dtype=FloatDType)
         if target_alpha_vec.ndim != 1:
             raise ValueError("Target alpha must be a scalar or a 1-D sequence.")

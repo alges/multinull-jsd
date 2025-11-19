@@ -15,7 +15,7 @@ FloatArray: TypeAlias = npt.NDArray[FloatDType]
 
 
 @pytest.fixture(scope="session")
-def make_backend() -> Callable[[int], ExactCDFBackend]:
+def make_backend() -> Callable[[int], ExactCDFBackend | None]:
     """
     Factory fixture that builds an ExactCDFBackend.
 
@@ -24,7 +24,7 @@ def make_backend() -> Callable[[int], ExactCDFBackend]:
     If the class is not implemented yet and raises NotImplementedError on construction, we mark the contract tests as
     XFAIL. Once implemented, those tests will run.
     """
-    def _factory(evidence_size: int) -> ExactCDFBackend:
+    def _factory(evidence_size: int) -> ExactCDFBackend | None:
         try:
             return ExactCDFBackend(evidence_size=evidence_size)
         except NotImplementedError:
@@ -37,7 +37,7 @@ def test_exact_backend_rejects_non_integer_or_bool_evidence_size() -> None:
     Test that the constructor rejects non-integer evidence_size values (including bool).
     """
     with pytest.raises(expected_exception=TypeError):
-        ExactCDFBackend(evidence_size=True)   # type: ignore[arg-type]
+        ExactCDFBackend(evidence_size=True)
     with pytest.raises(expected_exception=TypeError):
         ExactCDFBackend(evidence_size=3.0)    # type: ignore[arg-type]
 
@@ -75,4 +75,4 @@ def test_exact_backend_repr_contains_class_and_evidence_size() -> None:
 
 
 # Pull in the shared backend contract tests (vectorisation, clipping, monotonicity, etc.)
-from tests.backends._contract import *  # noqa: F401
+from tests.backends._contract import *  # noqa

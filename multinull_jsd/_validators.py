@@ -72,7 +72,7 @@ def validate_int_value(name: str, value: Any, min_value: Optional[int] = None, m
     ValueError
         If *value* is outside the defined bounds (or if the bounds are inconsistent, e.g., `min_value > max_value`).
     """
-    if not isinstance(value, numbers.Integral) or isinstance(value, bool):
+    if isinstance(value, bool) or not isinstance(value, numbers.Integral):
         # bool is a subclass of int, so we need to exclude it explicitly
         raise TypeError(f"{name} must be an integer. Got {type(value).__name__}.")
     return validate_bounded_value(name=name, value=int(value), min_value=min_value, max_value=max_value)

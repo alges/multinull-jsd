@@ -7,7 +7,7 @@ name = "multinull-jsd"
 version = "0.1.0"
 description = "Multi-Null Jensen–Shannon Distance (JSd) hypothesis test."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {file = "LICENSE"}
 authors = [{ name = "ALGES", email = "contacto@alges.cl" }]
 keywords = ["statistics", "hypothesis-testing", "multinomial", "Jensen-Shannon", "information-theory"]
@@ -15,13 +15,14 @@ classifiers = [
   "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only",
   "Operating System :: OS Independent", "Typing :: Typed"
 ]
-
 dependencies = [
   "numpy>=1.24"
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.4", "pytest-cov>=4.1", "hypothesis>=6.88", "mypy>=1.5", "ruff>=0.4", "pre-commit>=3.6"]
+dev = [
+  "pytest>=7.4", "pytest-cov>=4.1", "hypothesis>=6.88", "mypy>=1.5", "ruff>=0.4", "pre-commit>=3.6"
+]
 docs = [
   "sphinx>=7.2", "furo>=2024.1.29", "myst-parser>=2.0", "sphinx-autodoc-typehints>=2.0", "sphinx-copybutton>=0.5.2"
 ]
@@ -61,3 +62,6 @@ disallow_incomplete_defs = true
 disallow_untyped_defs = true
 pretty = true
 show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"

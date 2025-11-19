@@ -16,7 +16,6 @@ from multinull_jsd.types import FloatArray, ScalarFloat, IntArray
 from typing import Any, Optional
 
 import numpy.typing as npt
-import numbers
 
 
 class NullHypothesis:
@@ -69,7 +68,7 @@ class NullHypothesis:
         ValueError
             If ``target_alpha`` is outside :math:`[0,1]`.
         """
-        if not isinstance(target_alpha, numbers.Real) or isinstance(target_alpha, bool):
+        if isinstance(target_alpha, bool):
             raise TypeError("target_alpha must be a real number.")
 
         self._alpha = validate_bounded_value(

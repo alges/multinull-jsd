@@ -15,13 +15,13 @@ FloatArray: TypeAlias = npt.NDArray[FloatDType]
 
 
 @pytest.fixture(scope="session")
-def make_backend() -> Callable[[int], MultinomialMCCDFBackend]:
+def make_backend() -> Callable[[int], MultinomialMCCDFBackend | None]:
     """
     Factory fixture that builds a MultinomialMCCDFBackend with stable MC params.
     If construction raises NotImplementedError (backend not yet implemented),
     we mark the contract tests as XFAIL. Once implemented, they will run.
     """
-    def _factory(evidence_size: int) -> MultinomialMCCDFBackend:
+    def _factory(evidence_size: int) -> MultinomialMCCDFBackend | None:
         try:
             return MultinomialMCCDFBackend(evidence_size=evidence_size, mc_samples=5000, seed=1234)
         except NotImplementedError:
@@ -34,7 +34,7 @@ def test_mc_multinomial_rejects_non_integer_or_bool_evidence_size() -> None:
     evidence_size must be an integer (bool/float rejected).
     """
     with pytest.raises(expected_exception=TypeError):
-        MultinomialMCCDFBackend(evidence_size=True, mc_samples=1000, seed=0)  # type: ignore[arg-type]
+        MultinomialMCCDFBackend(evidence_size=True, mc_samples=1000, seed=0)
     with pytest.raises(expected_exception=TypeError):
         MultinomialMCCDFBackend(evidence_size=3.0, mc_samples=1000, seed=0)  # type: ignore[arg-type]
 
@@ -55,7 +55,7 @@ def test_mc_multinomial_rejects_non_integer_or_bool_mc_samples() -> None:
     mc_samples must be an integer (bool/float rejected).
     """
     with pytest.raises(expected_exception=TypeError):
-        MultinomialMCCDFBackend(evidence_size=10, mc_samples=True, seed=0)  # type: ignore[arg-type]
+        MultinomialMCCDFBackend(evidence_size=10, mc_samples=True, seed=0)
     with pytest.raises(expected_exception=TypeError):
         MultinomialMCCDFBackend(evidence_size=10, mc_samples=1.5, seed=0)  # type: ignore[arg-type]
 
@@ -79,7 +79,7 @@ def test_mc_multinomial_rejects_bad_seed_type_or_negative() -> None:
     with pytest.raises(expected_exception=TypeError):
         MultinomialMCCDFBackend(evidence_size=10, mc_samples=1000, seed=1.2)  # type: ignore[arg-type]
     with pytest.raises(expected_exception=TypeError):
-        MultinomialMCCDFBackend(evidence_size=10, mc_samples=1000, seed=False)  # type: ignore[arg-type]
+        MultinomialMCCDFBackend(evidence_size=10, mc_samples=1000, seed=False)
     with pytest.raises(expected_exception=ValueError):
         MultinomialMCCDFBackend(evidence_size=10, mc_samples=1000, seed=-1)
 
@@ -118,4 +118,4 @@ def test_mc_multinomial_repr_contains_params() -> None:
 
 
 # Pull in the shared backend contract tests (vectorisation, clipping, monotonicity, basic get_cdf validation)
-from tests.backends._contract import *  # noqa: F401,F403
+from tests.backends._contract import *  # noqa

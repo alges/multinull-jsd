@@ -14,8 +14,8 @@ Notes
 -----
 The sub-packages
 
-* :pymod:`multinull_jsd.cdf_backends`
-* :pymod:`multinull_jsd.null_structures`
+* :py:mod:`multinull_jsd.cdf_backends`
+* :py:mod:`multinull_jsd.null_structures`
 
 provide pluggable CDF estimation back-ends and internal data structures. These remain available for advanced users via
 the normal import path.
