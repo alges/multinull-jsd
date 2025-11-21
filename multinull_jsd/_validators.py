@@ -3,7 +3,7 @@
 side-effect-free checks** so that importing it never triggers heavy numerical work (NumPy is imported lazily and only
 for datatype inspection).
 """
-from multinull_jsd.types import FloatArray, FloatDType, IntArray, IntDType, ScalarInt, TNumber
+from multinull_jsd.types import FloatArray, FloatDType, IntArray, IntDType, ScalarInt, ScalarFloat, TNumber
 from typing import Any, Optional
 
 import numpy.typing as npt
@@ -12,11 +12,16 @@ import numpy as np
 import numbers
 
 
+Number = ScalarInt | ScalarFloat
+
 FLOAT_TOL: float = 1e-12
 
 
 def validate_bounded_value(
-    name: str, value: TNumber, min_value: Optional[float] = None, max_value: Optional[float] = None
+    name: str,
+    value: TNumber,
+    min_value: Optional[ScalarInt | ScalarFloat] = None,
+    max_value: Optional[ScalarInt | ScalarFloat] = None
 ) -> TNumber:
     """
     Check that the given value is a real number within the defined bounds (inclusive).
@@ -41,11 +46,11 @@ def validate_bounded_value(
     """
     if not isinstance(value, (int, float, np.integer, np.floating)) or isinstance(value, bool):
         raise TypeError(f"{name} must be a real number. Got {type(value).__name__}.")
-    if min_value is not None and max_value is not None and min_value > max_value:
+    if min_value is not None and max_value is not None and float(min_value) > float(max_value):
         raise ValueError(f"Inconsistent bounds for {name}: min_value ({min_value}) > max_value ({max_value}).")
-    if min_value is not None and value < min_value:
+    if min_value is not None and float(value) < float(min_value):
         raise ValueError(f"{name} must be at least {min_value}. Got {value!r}.")
-    if max_value is not None and value > max_value:
+    if max_value is not None and float(value) > float(max_value):
         raise ValueError(f"{name} must be at most {max_value}. Got {value!r}.")
     return value
 
@@ -75,7 +80,7 @@ def validate_int_value(name: str, value: Any, min_value: Optional[int] = None, m
     if isinstance(value, bool) or not isinstance(value, numbers.Integral):
         # bool is a subclass of int, so we need to exclude it explicitly
         raise TypeError(f"{name} must be an integer. Got {type(value).__name__}.")
-    return validate_bounded_value(name=name, value=int(value), min_value=min_value, max_value=max_value)
+    return int(validate_bounded_value(name=name, value=int(value), min_value=min_value, max_value=max_value))
 
 
 def validate_finite_array(name: str, value: Any) -> npt.NDArray:
