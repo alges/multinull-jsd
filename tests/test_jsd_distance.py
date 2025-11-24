@@ -5,7 +5,7 @@ Unit tests for multinull_jsd._jsd_distance.jsd.
 from multinull_jsd._jsd_distance import jsd
 
 from tests.conftest import p_vector
-from hypothesis import given, reproduce_failure
+from hypothesis import given
 from typing import TypeAlias
 
 import numpy.typing as npt
