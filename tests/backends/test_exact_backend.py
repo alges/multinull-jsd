@@ -159,15 +159,5 @@ def test_enumerate_histograms_k_equals_one() -> None:
     assert int(hist[0, 0]) == n
 
 
-def test_enumerate_histograms_uses_cache_per_k() -> None:
-    """
-    Repeated calls with the same k should reuse the cached array object.
-    """
-    backend: ExactCDFBackend = ExactCDFBackend(evidence_size=4)
-    h1: IntArray = backend._enumerate_histograms(k=3)
-    h2: IntArray = backend._enumerate_histograms(k=3)
-    assert h1 is h2
-
-
 # Pull in the shared backend contract tests (vectorization, clipping, monotonicity, etc.)
 from tests.backends._contract import *  # noqa

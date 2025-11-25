@@ -1,4 +1,4 @@
-from multinull_jsd.cdf_backends import MultinomialMCCDFBackend
+from multinull_jsd.cdf_backends import ExactCDFBackend, MultinomialMCCDFBackend
 from tests.conftest import CDFCallable
 from typing import Callable, TypeAlias
 
@@ -81,7 +81,6 @@ def test_mc_multinomial_rejects_bad_seed_type_or_negative() -> None:
         MultinomialMCCDFBackend(evidence_size=10, mc_samples=1000, seed=-1)
 
 
-@pytest.mark.xfail(reason="Monte-Carlo reproducibility by seed not implemented yet.")
 def test_mc_multinomial_reproducibility_by_seed(prob_vec3_default: FloatArray) -> None:
     """
     With the same seed and mc_samples, the estimated CDF values must be identical for the same probability vector and
@@ -103,7 +102,6 @@ def test_mc_multinomial_reproducibility_by_seed(prob_vec3_default: FloatArray) -
     assert np.array_equal(a1=output_1, a2=output_2)
 
 
-@pytest.mark.xfail(reason="__repr__ not implemented yet for MultinomialMCCDFBackend.")
 def test_mc_multinomial_repr_contains_params() -> None:
     """
     __repr__ should include the class name and key parameters (n, mc_samples, seed).
@@ -112,6 +110,30 @@ def test_mc_multinomial_repr_contains_params() -> None:
     repr_str: str = repr(backend)
     assert "MultinomialMCCDFBackend" in repr_str
     assert "15" in repr_str and "2000" in repr_str and "7" in repr_str
+
+
+def test_mc_multinomial_roughly_matches_exact() -> None:
+    """
+    For a small (n, k) problem, the MC CDF should be a reasonable approximation of the exact CDF.
+    We allow a loose tolerance to account for Monte-Carlo noise.
+    """
+    n: int = 4
+    p: FloatArray = np.array(object=[0.3, 0.7], dtype=np.float64)
+
+    exact_backend: ExactCDFBackend = ExactCDFBackend(evidence_size=n)
+    exact_cdf: CDFCallable = exact_backend.get_cdf(prob_vector=p)
+
+    mc_backend: MultinomialMCCDFBackend = MultinomialMCCDFBackend(evidence_size=n, mc_samples=20_000, seed=1234)
+    mc_cdf: CDFCallable = mc_backend.get_cdf(prob_vector=p)
+
+    tau_grid: FloatArray = np.linspace(start=0.0, stop=1.0, num=11, dtype=np.float64)
+
+    exact_vals: FloatArray = exact_cdf(tau=tau_grid)
+    mc_vals: FloatArray = mc_cdf(tau=tau_grid)
+
+    assert exact_vals.shape == mc_vals.shape
+    # Very loose bound to be robust across environments
+    assert np.all(a=np.abs(exact_vals - mc_vals) < 1e-2)
 
 
 # Pull in the shared backend contract tests (vectorization, clipping, monotonicity, basic get_cdf validation)
