@@ -181,7 +181,7 @@ class MultiNullJSDTest:
         if len(self._nulls) == 0:
             raise RuntimeError("At least one null hypothesis must be added before calling infer_p_values")
 
-        single_hist_queried: bool = hist_query.ndim == 1
+        single_hist_queried: bool = np.asarray(a=hist_query).ndim == 1
         hist_query_array: IntArray = validate_histogram_batch(
             name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n
         )
@@ -226,7 +226,7 @@ class MultiNullJSDTest:
         if len(self._nulls) == 0:
             raise RuntimeError("At least one null hypothesis must be added before calling infer_decisions")
 
-        single_hist_queried: bool = hist_query.ndim == 1
+        single_hist_queried: bool = np.asarray(a=hist_query).ndim == 1
         hist_query_array: IntArray = validate_histogram_batch(
             name="hist_query", value=hist_query, n_categories=self._k, histogram_size=self._n
         )
