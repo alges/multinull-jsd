@@ -1,4 +1,4 @@
-from multinull_jsd.cdf_backends import NormalMCCDFBackend
+from multinull_jsd.cdf_backends import MultinomialMCCDFBackend, NormalMCCDFBackend
 from tests.conftest import CDFCallable
 from typing import Callable, TypeAlias
 
@@ -80,7 +80,6 @@ def test_mc_normal_rejects_bad_seed_type_or_negative() -> None:
         NormalMCCDFBackend(evidence_size=10, mc_samples=1000, seed=-1)
 
 
-@pytest.mark.xfail(reason="Monte-Carlo reproducibility by seed not implemented yet.")
 def test_mc_normal_reproducibility_by_seed(prob_vec3_default: FloatArray) -> None:
     """
     With the same seed and mc_samples, the estimated CDF values must be identical
@@ -102,7 +101,6 @@ def test_mc_normal_reproducibility_by_seed(prob_vec3_default: FloatArray) -> Non
     assert np.array_equal(a1=output_1, a2=output_2)
 
 
-@pytest.mark.xfail(reason="__repr__ not implemented yet for NormalMCCDFBackend.")
 def test_mc_normal_repr_contains_params() -> None:
     """
     __repr__ should include the class name and key parameters (n, mc_samples, seed).
@@ -113,5 +111,45 @@ def test_mc_normal_repr_contains_params() -> None:
     assert "15" in repr_str and "2000" in repr_str and "7" in repr_str
 
 
-# Pull in the shared backend contract tests (vectorisation, clipping, monotonicity, basic get_cdf validation)
+def test_mc_normal_degenerate_prob_vector_point_mass_at_zero() -> None:
+    """
+    For a degenerate probability vector (one-hot), the normal backend should produce a point mass at JSd = 0.
+    """
+    backend: NormalMCCDFBackend = NormalMCCDFBackend(evidence_size=10, mc_samples=1_000, seed=0)
+    p: FloatArray = np.array(object=[1.0, 0.0, 0.0], dtype=FloatDType)
+
+    cdf: CDFCallable = backend.get_cdf(prob_vector=p)
+    tau: FloatArray = np.array(object=[-0.1, 0.0, 0.5, 1.0], dtype=FloatDType)
+    vals: FloatArray = cdf(tau=tau)
+
+    # Below 0 -> 0; at/above 0 -> 1
+    expected: FloatArray = np.array(object=[0.0, 1.0, 1.0, 1.0], dtype=FloatDType)
+    assert np.allclose(a=vals, b=expected)
+
+def test_mc_normal_roughly_matches_mc_multinomial() -> None:
+    """
+    For a moderate (n, k) problem, the normal-based CDF should roughly match the multinomial MC CDF. A loose tolerance
+    is used because the CLT approximation is only asymptotically accurate.
+    """
+    n: int = 50
+    p: FloatArray = np.array(object=[0.2, 0.3, 0.5], dtype=FloatDType)
+    tau_grid: FloatArray = np.linspace(start=0.0, stop=1.0, num=11, dtype=FloatDType)
+
+    normal_backend: NormalMCCDFBackend = NormalMCCDFBackend(evidence_size=n, mc_samples=10_000, seed=123)
+    multinom_backend: MultinomialMCCDFBackend = MultinomialMCCDFBackend(evidence_size=n, mc_samples=20_000, seed=456)
+
+    normal_cdf: CDFCallable = normal_backend.get_cdf(prob_vector=p)
+    multinom_cdf: CDFCallable = multinom_backend.get_cdf(prob_vector=p)
+
+    normal_vals: FloatArray = normal_cdf(tau=tau_grid)
+    multinom_vals: FloatArray = multinom_cdf(tau=tau_grid)
+
+    assert normal_vals.shape == multinom_vals.shape
+
+    # Very loose bound to accommodate CLT + MC noise; we only care that curves are in the same ballpark.
+    diff: FloatArray = np.abs(normal_vals - multinom_vals)
+    assert np.all(diff < 3e-2)
+
+
+# Pull in the shared backend contract tests (vectorization, clipping, monotonicity, basic get_cdf validation)
 from tests.backends._contract import *  # noqa

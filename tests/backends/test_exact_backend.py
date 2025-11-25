@@ -159,5 +159,19 @@ def test_enumerate_histograms_k_equals_one() -> None:
     assert int(hist[0, 0]) == n
 
 
+def test_exact_backend_histogram_enumeration_small_case() -> None:
+    """
+    For n=3, k=2, the exact backend's histogram enumeration should match the stars-and-bars combinations.
+    """
+    backend: ExactCDFBackend = ExactCDFBackend(evidence_size=3)
+    hist: IntArray = backend._enumerate_histograms(k=2)
+
+    expected: IntArray = np.array(object=[[0, 3], [1, 2], [2, 1], [3, 0]], dtype=IntDType)
+
+    assert hist.shape == expected.shape
+    # Enumeration order is deterministic in this implementation, so we can compare directly.
+    assert np.array_equal(a1=hist, a2=expected)
+
+
 # Pull in the shared backend contract tests (vectorization, clipping, monotonicity, etc.)
 from tests.backends._contract import *  # noqa

@@ -119,7 +119,7 @@ class ExactCDFBackend(CDFBackend):
 
         distances: FloatArray = jsd(p=prob_vector, q=histogram_array.astype(dtype=FloatDType, copy=False) / n)
 
-        if self._lf_cache is None or self._lf_cache.shape[0] <= n:
+        if self._lf_cache is None:
             self._lf_cache = np.fromiter(iter=(math.lgamma(h + 1) for h in range(n + 1)), dtype=FloatDType)
         lf_n: float = float(self._lf_cache[n])
         sum_lf_h: FloatArray = self._lf_cache[histogram_array].sum(axis=1)

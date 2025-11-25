@@ -73,8 +73,8 @@ class CDFBackend(ABC):
 
         Returns
         -------
-        A tuple containng the elements of the input `prob_vector`, preserving their numerical order for hashability and
-        consistent mapping.
+        A tuple containing the elements of the input `prob_vector`, preserving their numerical order for hashability
+        and consistent mapping.
         """
         return tuple(float(x) for x in prob_vector)
 
@@ -121,7 +121,7 @@ class CDFBackend(ABC):
             total_weight: float = float(weights_arr.sum())
             if not np.isfinite(total_weight) or total_weight <= 0.0:
                 raise ValueError("weights must sum to a positive finite value.")
-            weights_arr /= weights_arr.sum()
+            weights_arr /= total_weight
 
         # Sort by distance and build a cumulative sum of weights.
         order: IntArray = np.argsort(a=distances).astype(dtype=IntDType)

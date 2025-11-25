@@ -45,11 +45,9 @@ class MultinomialMCCDFBackend(CDFBackend):
         if cdf_key in self._cdf_cache:
             return self._cdf_cache[cdf_key]
 
-        histogram_array = self._rng.multinomial(n=self._evidence_size, pvals=prob_vector, size=self._mc_samples)
-        distances: FloatArray = jsd(
-            p=prob_vector,
-            q=histogram_array.astype(dtype=FloatDType, copy=False) / self._evidence_size
-        )
+        n: int = self.evidence_size
+        histogram_array = self._rng.multinomial(n=n, pvals=prob_vector, size=self._mc_samples)
+        distances: FloatArray = jsd(p=prob_vector, q=histogram_array.astype(dtype=FloatDType, copy=False) / n)
 
         cdf_callable: CDFCallable = self._build_cdf_from_samples(distances=distances, weights=None)
         self._cdf_cache[cdf_key] = cdf_callable
