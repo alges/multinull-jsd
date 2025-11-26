@@ -1,8 +1,7 @@
 """
 Unit tests for type aliases and protocols in multinull_jsd.types.
 """
-from multinull_jsd.types import IntDType, FloatDType, CDFCallable
-from tests.conftest import FloatArray, ScalarFloat
+from multinull_jsd.types import IntDType, FloatDType, FloatArray, ScalarFloat, CDFCallable
 
 import numpy as np
 

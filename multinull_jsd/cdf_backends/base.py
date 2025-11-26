@@ -15,9 +15,10 @@ Design contract
   - monotone non-decreasing in ``tau``,
   - clipped to ``[0, 1]``.
 """
-from multinull_jsd._validators import validate_int_value, validate_finite_array
+from multinull_jsd._jsd_distance import jsd
+from multinull_jsd._validators import validate_int_value, validate_finite_array, validate_probability_vector
 from multinull_jsd.types import FloatDType, IntDType, FloatArray, IntArray, ScalarFloat, CDFCallable
-from typing import Optional, cast
+from typing import Optional, Callable, cast
 from abc import ABC, abstractmethod
 
 import numpy.typing as npt
@@ -164,13 +165,29 @@ class CDFBackend(ABC):
         return cast(CDFCallable, cdf)
 
     @abstractmethod
+    def obtain_histograms_and_probabilities(self, prob_vector: FloatArray) -> tuple[IntArray, FloatArray]:
+        """
+        For a given base probability vector :math:`\\mathbf{p}`, it obtains a (possibly approximate) representation of
+        the distribution of histograms: math:`\\mathbf{H} \\sim \\mathrm{Multinomial}(n, \\mathbf{p})`.
+
+        Parameters
+        ----------
+        prob_vector
+            1-D array of shape (k,) representing a probability vector in :math:`\\Delta_k``.
+
+        Returns
+        -------
+        IntArray
+            2-D array of shape (m, k) with non-negative integer counts whose rows sum to n.
+        FloatArray
+            1-D array of shape (m,) with non-negative weights that sum to 1 (up to numerical rounding).
+        """
+
     def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
         """
         Returns a callable function
         :math:`F(\\tau) = \\mathbb{P}(\\mathrm{JSd}(\\mathbf{H}/n,\\mathbf{p}) \\leq \\tau)`, where
         :math:`\\mathbf{H}\\sim\\mathrm{Multinomial}(\\mathbf{p},n)`.
-
-        Implementations may employ exact enumeration or approximations.
 
         Parameters
         ----------
@@ -191,6 +208,75 @@ class CDFBackend(ABC):
         ValueError
             If *prob_vector* is not 1-D, contains negative values, or does not sum to one.
         """
+        prob_vector = validate_probability_vector(
+            name="prob_vector", value=prob_vector, n_categories=None
+        ).astype(dtype=FloatDType, copy=False)
+
+        cdf_key: tuple[float, ...] = self._prob_vector_to_key(prob_vector=prob_vector)
+        if cdf_key in self._cdf_cache:
+            return self._cdf_cache[cdf_key]
+
+        histograms, weights = self.obtain_histograms_and_probabilities(prob_vector=prob_vector)
+        distances: FloatArray = jsd(
+            p=prob_vector, q=histograms.astype(dtype=FloatDType, copy=False) / self.evidence_size
+        )
+        cdf_callable: CDFCallable = self._build_cdf_from_samples(distances=distances, weights=weights)
+        self._cdf_cache[cdf_key] = cdf_callable
+        return cdf_callable
+
+    def decision_distribution_on_hypothesis(
+        self, prob_vector: FloatArray, decision_fn: Callable[[IntArray], IntArray], n_nulls: int,
+    ) -> FloatArray:
+        """
+        Compute the distribution of decisions under a hypothesis
+        :math:`\\mathbf{H} \\sim \\mathrm{Multinomial}(n, \\mathbf{q})`, as induced by a user-provided decision rule.
+        Specifically, if the decision rule :math:`\\varphi` returns labels in :math:`\\{-1, 1, \\dots, L\\}`, this
+        method returns the vector
+
+        .. math::
+           \\bigl(
+               \\mathbb{P}\\bigl(\\varphi(\\mathbf{H}) = 1\\bigr),
+               \\dots,
+               \\mathbb{P}\\bigl(\\varphi(\\mathbf{H}) = L\\bigr)
+           \\bigr),
+
+        approximated (or computed exactly) according to the backend.
+
+        Parameters
+        ----------
+        prob_vector
+            1-D probability vector :math:`\\mathbf{q} \\in \\Delta_k` that parametrizes the multinomial hypothesis
+            :math:`\\mathbf{H} \\sim \\mathrm{Multinomial}(n, \\mathbf{q})`.
+        decision_fn
+            Callable that takes a batch of histograms of shape :math:`(M, k)` and returns a 1-D integer array of shape
+            :math:`(M,)`.
+        n_nulls
+            Number of null hypotheses :math:`L`.
+
+        Returns
+        -------
+        FloatArray
+            1-D array of length :math:`L`, where the :math:`\\ell`-th entry is
+            :math:`\\mathbb{P}\\bigl(\\varphi(\\mathbf{H}) = \\ell
+            \\mid \\mathbf{H} \\sim \\mathrm{Multinomial}(n, \\mathbf{q})\\bigr)`
+            (or its Monte-Carlo / approximate estimate).
+        """
+        prob_vector = validate_probability_vector(
+            name="prob_vector", value=prob_vector, n_categories=None
+        ).astype(dtype=FloatDType, copy=False)
+
+        histograms, weights = self.obtain_histograms_and_probabilities(prob_vector=prob_vector)
+        decisions: IntArray = np.asarray(a=decision_fn(histograms), dtype=IntDType)
+        if decisions.ndim != 1 or len(decisions) != histograms.shape[0]:
+            raise ValueError("decision_fn must return a 1-D array of decisions with shape (n_samples,).")
+        if np.any((decisions < -1) | (decisions == 0) | (decisions > n_nulls)):
+            raise ValueError("All decisions must be integers in the range [1, L] or -1.")
+
+        decision_probs: FloatArray = np.zeros(shape=(n_nulls,), dtype=FloatDType)
+        for null_idx in range(1, n_nulls + 1):
+            decision_probs[null_idx - 1] = float(weights[np.equal(decisions, null_idx)].sum())
+
+        return decision_probs
 
     @abstractmethod
     def __repr__(self) -> str:

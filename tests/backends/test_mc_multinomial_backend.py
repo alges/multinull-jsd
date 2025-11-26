@@ -1,5 +1,6 @@
 from multinull_jsd.cdf_backends import ExactCDFBackend, MultinomialMCCDFBackend
-from tests.conftest import CDFCallable
+from multinull_jsd.types import CDFCallable
+
 from typing import Callable, TypeAlias
 
 import numpy.typing as npt

@@ -58,7 +58,11 @@ class MultiNullJSDTest:
         self._n: int = validate_int_value(name="evidence_size", value=evidence_size, min_value=1)
         self._k: int = validate_int_value(name="prob_dim", value=prob_dim, min_value=1)
 
+        self._cdf_method: str = cdf_method
         self._backend: CDFBackend
+        self._mc_samples: Optional[int] = mc_samples
+        self._seed: Optional[int] = seed
+
         if cdf_method in NON_MC_CDF_BACKEND_FACTORY:
             self._backend = NON_MC_CDF_BACKEND_FACTORY[cdf_method](self._n)
         elif cdf_method in MC_CDF_BACKEND_FACTORY:
@@ -75,8 +79,6 @@ class MultiNullJSDTest:
 
         # Initialization of container for null hypotheses
         self._nulls: IndexedHypotheses = IndexedHypotheses(cdf_backend=self._backend, prob_dim=self._k)
-
-        raise NotImplementedError
 
     def add_nulls(self, prob_vector: npt.ArrayLike, target_alpha: ScalarFloat | Sequence[ScalarFloat]) -> None:
         """
@@ -244,7 +246,7 @@ class MultiNullJSDTest:
         decisions: IntArray = np.empty(shape=(m,), dtype=IntDType)
         for query_idx in range(m):
             non_rejected_indexes: IntArray = np.nonzero(a=non_rejected_mask[query_idx])[0]
-            if non_rejected_indexes > 0:  # At least one non-rejected null
+            if non_rejected_indexes.size > 0:  # At least one non-rejected null
                 non_rejected_p_values: FloatArray = p_values[query_idx, non_rejected_indexes]
                 max_p_value: float = float(non_rejected_p_values.max())
                 tied_null_indexes: IntArray = np.nonzero(a=np.equal(non_rejected_p_values, float(max_p_value)))[0]
@@ -257,11 +259,11 @@ class MultiNullJSDTest:
         return decisions
 
     @overload
-    def get_alpha(self, null_index: ScalarInt) -> ScalarFloat: ...
+    def get_alpha(self, null_index: ScalarInt) -> float: ...
     @overload
     def get_alpha(self, null_index: Sequence[ScalarInt]) -> FloatArray: ...
 
-    def get_alpha(self, null_index: ScalarInt | Sequence[ScalarInt]) -> ScalarFloat | FloatArray:
+    def get_alpha(self, null_index: ScalarInt | Sequence[ScalarInt]) -> float | FloatArray:
         """
         Return the actual significance level (Type-I error probability) for a null hypothesis or a list of hypotheses.
 
@@ -273,17 +275,44 @@ class MultiNullJSDTest:
 
         Returns
         -------
-        ScalarFloat | Sequence[ScalarFloat]
+        float | FloatArray
             The actual significance level for the specified null hypothesis or a list of significance levels for each
             specified null hypothesis. If a single index is provided, a scalar float is returned; if a sequence of
             indices is provided, a 1-D array of floats is returned.
         """
-        validate_null_indices(name="null_index", value=null_index, n_nulls=len(self._nulls), keep_duplicates=True)
-        raise NotImplementedError
+        n_nulls: int = len(self._nulls)
+        if n_nulls == 0:
+            raise ValueError("No null hypotheses are currently registered.")
 
-    def get_beta(self, prob_query: npt.ArrayLike) -> ScalarFloat | FloatArray:
+        validate_null_indices(name="null_index", value=null_index, n_nulls=n_nulls, keep_duplicates=True)
+
+        null_indexes_list: list[int] = np.atleast_1d(np.asarray(a=null_index, dtype=IntDType)).tolist()
+        is_scalar_request: bool = isinstance(null_index, (int, np.integer))
+
+        alphas: FloatArray = np.empty(shape=len(null_indexes_list), dtype=FloatDType)
+
+        for idx_pos, null_idx_base_1 in enumerate(null_indexes_list):
+            null_p: FloatArray = self._nulls[int(null_idx_base_1) - 1].probability_vector.astype(
+                dtype=FloatDType, copy=False,
+            )
+            # Probability mass of *each* null decision under H ~ Multinomial(n, p_ℓ)
+            decision_probs: FloatArray = self._backend.decision_distribution_on_hypothesis(
+                prob_vector=null_p,
+                decision_fn=lambda h_batch: np.asarray(self.infer_decisions(hist_query=h_batch), dtype=IntDType),
+                n_nulls=n_nulls
+            )
+            null_alpha: float = 1.0 - decision_probs.sum()
+            # Clip for numerical stability
+            alphas[idx_pos] = float(np.clip(a=null_alpha, a_min=0.0, a_max=1.0))
+
+        if is_scalar_request:
+            return float(alphas[0])
+
+        return alphas
+
+    def get_beta(self, prob_query: npt.ArrayLike) -> float | FloatArray:
         """
-        Get the maximum Type-II error probability (:math:`\\beta`) over all null hypotheses for a given probability
+        Get the overall Type-II error probability (:math:`\\beta`) over all null hypotheses for a given probability
         vector
 
         Parameters
@@ -294,24 +323,58 @@ class MultiNullJSDTest:
 
         Returns
         -------
-        ScalarFloat | FloatArray
-            Estimated maximum Type-II error probability over all null hypotheses. If the input is a single histogram,
+        float | FloatArray
+            Estimated overall Type-II error probability over all null hypotheses. If the input is a single histogram,
             a scalar float is returned; if the input is a batch, a 1-D array of floats is returned.
         """
-        validate_probability_batch(name="prob_query", value=prob_query, n_categories=self._k)
-        raise NotImplementedError
+        prob_batch: FloatArray = validate_probability_batch(
+            name="prob_query", value=prob_query, n_categories=self._k
+        ).astype(dtype=FloatDType, copy=False)
 
-    def get_fwer(self) -> ScalarFloat:
+        n_alternatives: int = prob_batch.shape[0]
+        n_nulls: int = len(self._nulls)
+
+        if n_nulls == 0:
+            # No nulls → decision is always -1, so β ≡ 0.
+            if n_alternatives == 1:
+                return 0.0
+            return np.zeros(shape=(n_alternatives,), dtype=FloatDType)
+
+        betas: FloatArray = np.empty(shape=(n_alternatives,), dtype=FloatDType)
+
+        for alternative_idx in range(n_alternatives):
+            decision_probs: FloatArray = self._backend.decision_distribution_on_hypothesis(
+                prob_vector=prob_batch[alternative_idx, :],
+                decision_fn=lambda h_batch: np.asarray(a=self.infer_decisions(hist_query=h_batch), dtype=IntDType),
+                n_nulls=n_nulls,
+            )
+            betas[alternative_idx] = np.clip(a=decision_probs.sum(), a_min=0.0, a_max=1.0)
+
+        if n_alternatives == 1:
+            return float(betas[0])
+        return betas
+
+    def get_fwer(self) -> float:
         """
         Returns the actual Family-Wise Error Rate (FWER) of the Multi-Null JSd test, i.e., the probability of making at
         least one Type-I error when any of the null hypotheses is true.
 
         Returns
         -------
-        ScalarFloat
+        float
             The actual FWER of the Multi-Null JSd test.
         """
-        raise NotImplementedError
+        n_nulls: int = len(self._nulls)
+        if n_nulls == 0:
+            return 0.0  # No nulls → no Type-I errors are possible.
+        return float(np.max(self.get_alpha(null_index=list(range(1, n_nulls + 1)))))
 
     def __repr__(self) -> str:
-        raise NotImplementedError
+        representation: str = (
+            f"MultiNullJSDTest(n={self._n}, k={self._k}, cdf_method={self._cdf_method!r}, n_nulls={len(self._nulls)}"
+        )
+        if self._mc_samples is not None and self._seed is not None:
+            representation += f", mc_samples={self._mc_samples}, seed={self._seed}"
+        representation += ")"
+
+        return representation

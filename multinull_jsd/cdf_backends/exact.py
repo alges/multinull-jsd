@@ -16,9 +16,8 @@ Notes
 """
 from .base import CDFBackend
 
-from multinull_jsd._jsd_distance import jsd
 from multinull_jsd._validators import validate_probability_vector
-from multinull_jsd.types import FloatArray, IntArray, FloatDType, IntDType, CDFCallable
+from multinull_jsd.types import FloatArray, IntArray, FloatDType, IntDType
 
 from typing import Optional
 
@@ -93,15 +92,10 @@ class ExactCDFBackend(CDFBackend):
 
         return np.array(object=histograms, dtype=IntDType)
 
-
-    def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
+    def obtain_histograms_and_probabilities(self, prob_vector: FloatArray) -> tuple[IntArray, FloatArray]:
         prob_vector = validate_probability_vector(
             name="prob_vector", value=prob_vector, n_categories=None
         ).astype(dtype=FloatDType, copy=False)
-
-        cdf_key: tuple[float, ...] = self._prob_vector_to_key(prob_vector=prob_vector)
-        if cdf_key in self._cdf_cache:
-            return self._cdf_cache[cdf_key]
 
         k: int = prob_vector.shape[0]
         n: int = self.evidence_size
@@ -117,8 +111,6 @@ class ExactCDFBackend(CDFBackend):
         if np.any(p_zero_mask):
             histogram_array = histogram_array[np.all(histogram_array[:, p_zero_mask] == 0, axis=1)]
 
-        distances: FloatArray = jsd(p=prob_vector, q=histogram_array.astype(dtype=FloatDType, copy=False) / n)
-
         if self._lf_cache is None:
             self._lf_cache = np.fromiter(iter=(math.lgamma(h + 1) for h in range(n + 1)), dtype=FloatDType)
         lf_n: float = float(self._lf_cache[n])
@@ -129,9 +121,13 @@ class ExactCDFBackend(CDFBackend):
             ).sum(axis=1)
         histogram_weights: FloatArray = np.exp(lf_n + sum_h_weighted_log_p - sum_lf_h)
 
-        cdf_callable: CDFCallable = self._build_cdf_from_samples(distances=distances, weights=histogram_weights)
-        self._cdf_cache[cdf_key] = cdf_callable
-        return cdf_callable
+        total_prob: float = float(histogram_weights.sum())
+        if total_prob <= 0.0 or not np.isfinite(total_prob):
+            raise RuntimeError(
+                "Failed to compute a valid multinomial probability mass function.",
+            )
+
+        return histogram_array, histogram_weights / total_prob
 
     def __repr__(self) -> str:
         return f"ExactCDFBackend(evidence_size={self.evidence_size})"

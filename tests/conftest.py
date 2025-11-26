@@ -1,12 +1,10 @@
 """
 Configuration and fixtures for tests.
 """
-# TODO: Provide searchstrategy return types when mypy supports it.
 from multinull_jsd.cdf_backends import CDFBackend
-from multinull_jsd.types import CDFCallable, FloatArray, IntArray, ScalarFloat
+from multinull_jsd.types import FloatDType, IntDType, FloatArray, IntArray
 from hypothesis.extra import numpy as hnp
 from hypothesis import strategies as st
-from typing import overload, cast
 
 import numpy as np
 
@@ -72,20 +70,24 @@ class TestCDFBackend(CDFBackend):
             pass
         self._n = int(evidence_size)
 
-    @property
-    def evidence_size(self) -> int:
-        return self._n
+    def obtain_histograms_and_probabilities(
+        self,
+        prob_vector: FloatArray,
+    ) -> tuple[IntArray, FloatArray]:
+        """
+        Trivial deterministic representation of Multinomial(n, p):
 
-    def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
-        @overload
-        def cdf(tau: ScalarFloat) -> ScalarFloat: ...
-        @overload
-        def cdf(tau: FloatArray) -> FloatArray: ...
-        def cdf(tau: ScalarFloat | FloatArray) -> ScalarFloat | FloatArray:
-            if np.isscalar(tau):
-                return float(np.clip(tau, a_min=0.0, a_max=1.0))
-            return np.clip(np.asarray(tau, dtype=np.float64), a_min=0.0, a_max=1.0)
-        return cast(CDFCallable, cdf)
+        - Build a single histogram that puts all n counts on the index
+          of the largest p_j.
+        - Assign all probability mass (weight 1.0) to that histogram.
+
+        This is enough to make the base methods (e.g. decision_distribution_on_hypothesis)
+        well-defined if they are ever called on this test backend.
+        """
+        histograms: IntArray = np.zeros(shape=(1, prob_vector.shape[0]), dtype=IntDType)
+        histograms[0, int(np.argmax(a=prob_vector))] = self.evidence_size
+        weights: FloatArray = np.array(object=[1.0], dtype=FloatDType)
+        return histograms, weights
 
     def __repr__(self) -> str:
         return f"TestCDFBackend(evidence_size={self._n})"

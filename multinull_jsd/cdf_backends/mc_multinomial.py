@@ -3,9 +3,8 @@ Monte-Carlo CDF backend that draws multinomial histograms.
 """
 from .base import CDFBackend
 
-from multinull_jsd._jsd_distance import jsd
 from multinull_jsd._validators import validate_int_value, validate_probability_vector
-from multinull_jsd.types import FloatDType, FloatArray, CDFCallable
+from multinull_jsd.types import FloatDType, FloatArray, IntArray, IntDType
 
 import numpy as np
 
@@ -36,22 +35,17 @@ class MultinomialMCCDFBackend(CDFBackend):
         self._seed: int = validate_int_value(name="seed", value=seed, min_value=0)
         self._rng: np.random.Generator = np.random.default_rng(seed=self._seed)
 
-    def get_cdf(self, prob_vector: FloatArray) -> CDFCallable:
+    def obtain_histograms_and_probabilities(self, prob_vector: FloatArray) -> tuple[IntArray, FloatArray]:
         prob_vector = validate_probability_vector(
             name="prob_vector", value=prob_vector, n_categories=None
         ).astype(dtype=FloatDType, copy=False)
-
-        cdf_key: tuple[float, ...] = self._prob_vector_to_key(prob_vector=prob_vector)
-        if cdf_key in self._cdf_cache:
-            return self._cdf_cache[cdf_key]
-
-        n: int = self.evidence_size
-        histogram_array = self._rng.multinomial(n=n, pvals=prob_vector, size=self._mc_samples)
-        distances: FloatArray = jsd(p=prob_vector, q=histogram_array.astype(dtype=FloatDType, copy=False) / n)
-
-        cdf_callable: CDFCallable = self._build_cdf_from_samples(distances=distances, weights=None)
-        self._cdf_cache[cdf_key] = cdf_callable
-        return cdf_callable
+        histogram_array = self._rng.multinomial(
+            n=self._evidence_size, pvals=prob_vector, size=self._mc_samples
+        ).astype(dtype=IntDType, copy=False)
+        histogram_probabilities: FloatArray = np.full(
+            shape=self._mc_samples, fill_value=1.0 / self._mc_samples, dtype=FloatDType
+        )
+        return histogram_array, histogram_probabilities
 
     def __repr__(self) -> str:
         return (
