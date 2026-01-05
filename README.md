@@ -24,7 +24,6 @@ Python **≥ 3.10**, NumPy **≥ 1.24**.
 ```python
 from multinull_jsd import MultiNullJSDTest
 
-# NOTE: API scaffold — methods raise NotImplementedError until implemented.
 test = MultiNullJSDTest(evidence_size=100, prob_dim=3, cdf_method="mc_multinomial", mc_samples=50_000, seed=1234)
 test.add_nulls([0.5, 0.3, 0.2], target_alpha=0.05)
 test.add_nulls([0.4, 0.4, 0.2], target_alpha=0.01)
