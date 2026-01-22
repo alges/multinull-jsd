@@ -163,7 +163,7 @@ def multinull_decision_holm(
 
     1. Computes a p-value for each null hypothesis H₀^ℓ using `single_null_pvalue_fn`.
     2. Applies Holm's step-down multiple-testing procedure at level `alpha_global`.
-    3. Produces a **single decision label** in the same convention as `MultiNullJSDTest`:
+    3. Produces a **single decision label** in the same convention as `MNSquaredTest`:
        - Returns ℓ* ∈ {1, …, n_nulls} if at least one null is not rejected; in that case, the chosen label is the
          **non-rejected null with the largest raw p-value**.
        - Returns `REJECT_DECISION` (-1) if **all nulls are rejected**.

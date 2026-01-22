@@ -1,5 +1,5 @@
-multinull-jsd documentation
-===========================
+mn-squared documentation
+========================
 
 .. toctree::
    :maxdepth: 2

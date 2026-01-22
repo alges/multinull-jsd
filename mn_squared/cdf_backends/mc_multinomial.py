@@ -3,8 +3,8 @@ Monte-Carlo CDF backend that draws multinomial histograms.
 """
 from .base import CDFBackend
 
-from multinull_jsd._validators import validate_int_value, validate_probability_vector
-from multinull_jsd.types import FloatDType, FloatArray, IntArray, IntDType
+from mn_squared._validators import validate_int_value, validate_probability_vector
+from mn_squared.types import FloatDType, FloatArray, IntArray, IntDType
 
 import numpy as np
 

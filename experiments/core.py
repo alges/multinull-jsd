@@ -2,7 +2,7 @@
 Experiment orchestration for multi-null JSd testing and baselines.
 
 This module runs scenario-based Monte Carlo experiments comparing:
-- `MultiNullJSDTest` (the proposed method), and
+- `MNSquaredTest` (the proposed method), and
 - Holm-based baselines (single-stat and multi-stat backends).
 
 For each scenario, it:
@@ -12,7 +12,7 @@ For each scenario, it:
 4) records decision counts, empirical metrics, and runtime summaries, and
 5) writes scenario artifacts under `results/` (CSV + cached nulls/alts, and optionally compressed histogram arrays).
 """
-from multinull_jsd import MultiNullJSDTest
+from mn_squared import MNSquaredTest
 from typing import Any, Callable
 from utils import make_generator
 
@@ -104,16 +104,16 @@ def _sample_shared_histograms_for_n(
     return h0_all, hq_all
 
 
-def make_multinull_jsd_test(
+def make_mn_squared_test(
     null_probabilities: FloatArray,
     alpha_vector: FloatArray,
     evidence_size: int,
     cdf_method: str = "exact",
     mc_samples: int | None = None,
     seed: int | None = None,
-) -> MultiNullJSDTest:
+) -> MNSquaredTest:
     """
-    Construct and configure a `MultiNullJSDTest` instance for a given set of null models.
+    Construct and configure an `MNSquaredTest` instance for a given set of null models.
 
     Parameters
     ----------
@@ -139,8 +139,7 @@ def make_multinull_jsd_test(
 
     Returns
     -------
-    Configured `MultiNullJSDTest` instance, with all nulls added and target
-    alphas set.
+    Configured `MNSquaredTest` instance, with all nulls added and target alphas set.
     """
     nulls_arr: FloatArray = np.asarray(a=null_probabilities, dtype=np.float64)
     alpha_vec: FloatArray = np.asarray(a=alpha_vector, dtype=np.float64)
@@ -154,7 +153,7 @@ def make_multinull_jsd_test(
             f"`alpha_vector` must have shape (L,), L={n_nulls}; got {alpha_vec.shape}."
         )
 
-    test: MultiNullJSDTest = MultiNullJSDTest(
+    test: MNSquaredTest = MNSquaredTest(
         evidence_size=evidence_size,
         prob_dim=k,
         cdf_method=cdf_method,
@@ -168,14 +167,14 @@ def make_multinull_jsd_test(
     return test
 
 
-def get_decisions_for_histograms(test: MultiNullJSDTest, histograms: IntArray) -> IntArray:
+def get_decisions_for_histograms(test: MNSquaredTest, histograms: IntArray) -> IntArray:
     """
-    Evaluate `MultiNullJSDTest` decisions on a batch of histograms.
+    Evaluate `MNSquaredTest` decisions on a batch of histograms.
 
     Parameters
     ----------
     test:
-        A configured `MultiNullJSDTest` instance.
+        A configured `MNSquaredTest` instance.
 
     histograms:
         Two-dimensional array of shape (m, k) with integer counts per
@@ -192,7 +191,7 @@ def get_decisions_for_histograms(test: MultiNullJSDTest, histograms: IntArray) -
     return decisions_arr
 
 
-def run_consistency_point_multinull_jsd(
+def run_consistency_point_mn_squared(
     null_probabilities: FloatArray,
     alpha_vector: FloatArray,
     alts_df: pd.DataFrame,
@@ -207,7 +206,7 @@ def run_consistency_point_multinull_jsd(
     rng_sampling: int | np.random.Generator | None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
-    Run a strong-consistency evaluation point for MultiNullJSDTest.
+    Run a strong-consistency evaluation point for MNSquaredTest.
 
     Parameters
     ----------
@@ -231,7 +230,7 @@ def run_consistency_point_multinull_jsd(
     method_name:
         Name of the method (for progress display).
     cdf_method:
-        CDF computation backend for `MultiNullJSDTest`. Must be one of:
+        CDF computation backend for `MNSquaredTest`. Must be one of:
         - "exact"
         - "mc_multinomial"
         - "mc_normal"
@@ -255,7 +254,7 @@ def run_consistency_point_multinull_jsd(
     null_p: FloatArray = np.asarray(a=null_probabilities, dtype=np.float64)
     n_nulls, k = null_p.shape
 
-    test: MultiNullJSDTest = make_multinull_jsd_test(
+    test: MNSquaredTest = make_mn_squared_test(
         null_probabilities=null_p,
         alpha_vector=np.asarray(alpha_vector, dtype=np.float64),
         evidence_size=int(n),
@@ -713,7 +712,7 @@ def run_experiment_core_for_scenario(
     scenario:
         Scenario definition (null family, alpha vector, alternatives targets, and method plans).
     include_baselines:
-        If True, include Holm-based baselines in addition to `MultiNullJSD`.
+        If True, include Holm-based baselines in addition to `MNSquared`.
     save_histograms:
         If True, persist sampled histograms to disk (can be large).
 
@@ -838,7 +837,7 @@ def run_experiment_core_for_scenario(
             h0: IntArray = h0_all[:, :int(m_null), :]  # (L, m_null, k)
             hq: IntArray = hq_all[:, :int(m_alt), :]  # (T, m_alt, k)
 
-            # MultiNullJSD variants
+            # MNSquared variants
             if method == METHOD_JSD:
                 print(f"{scenario.name} | {method} | n={n}")
                 cdf_method: str = scenario.cdf_method
@@ -847,7 +846,7 @@ def run_experiment_core_for_scenario(
 
                 t_total0: float = time.perf_counter()
                 t0: float = time.perf_counter()
-                test: MultiNullJSDTest = make_multinull_jsd_test(
+                test: MNSquaredTest = make_mn_squared_test(
                     null_probabilities=null_p,
                     alpha_vector=alpha_vec,
                     evidence_size=int(n),

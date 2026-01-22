@@ -1,5 +1,5 @@
-from multinull_jsd.cdf_backends import CDFBackend
-from multinull_jsd.types import FloatDType, FloatArray, CDFCallable
+from mn_squared.cdf_backends import CDFBackend
+from mn_squared.types import FloatDType, FloatArray, CDFCallable
 
 import numpy as np
 

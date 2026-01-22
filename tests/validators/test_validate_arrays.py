@@ -1,8 +1,8 @@
 """
-Unit tests for the validate_finite_array function in the multinull_jsd._validators module.
+Unit tests for the validate_finite_array function in the mn_squared._validators module.
 """
 # noinspection PyProtectedMember
-from multinull_jsd._validators import validate_finite_array
+from mn_squared._validators import validate_finite_array
 
 from hypothesis.extra import numpy as hnp
 from hypothesis import strategies as st

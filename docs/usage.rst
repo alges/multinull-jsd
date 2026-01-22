@@ -6,16 +6,16 @@ Installation
 
 .. code-block:: bash
 
-   python3 -m pip install multinull-jsd
+   python3 -m pip install mn-squared
 
 Quick start
 -----------
 
 .. code-block:: python
 
-   from multinull_jsd import MultiNullJSDTest
+   from mn_squared import MNSquaredTest
 
-   test = MultiNullJSDTest(
+   test = MNSquaredTest(
        evidence_size=100,
        prob_dim=3,
        cdf_method="exact",

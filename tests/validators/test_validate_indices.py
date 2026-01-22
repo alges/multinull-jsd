@@ -2,7 +2,7 @@
 Unit tests for the validate_null_indices and validate_null_slice functions.
 """
 # noinspection PyProtectedMember
-from multinull_jsd._validators import validate_null_indices, validate_null_slice
+from mn_squared._validators import validate_null_indices, validate_null_slice
 
 from typing import TypeAlias
 

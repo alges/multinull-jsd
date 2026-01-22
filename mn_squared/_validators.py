@@ -1,9 +1,9 @@
 """
-**Internal validation helpers** used across the *multinull-jsd* code-base. The module contains **only light-weight,
+**Internal validation helpers** used across the *mn-squared* code-base. The module contains **only light-weight,
 side-effect-free checks** so that importing it never triggers heavy numerical work (NumPy is imported lazily and only
 for datatype inspection).
 """
-from multinull_jsd.types import FloatArray, FloatDType, IntArray, IntDType, ScalarInt, ScalarFloat, TNumber
+from mn_squared.types import FloatArray, FloatDType, IntArray, IntDType, ScalarInt, ScalarFloat, TNumber
 from typing import Any, Optional
 
 import numpy.typing as npt

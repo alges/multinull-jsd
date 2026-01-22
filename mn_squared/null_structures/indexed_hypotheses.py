@@ -9,12 +9,12 @@ Indexing policy
 * On index deletion, subsequent indices are shifted left, preserving continuity.
 * ``__getitem__`` and ``__delitem__`` expect 1-based integers, slices, or iterables.
 """
-from multinull_jsd.null_structures.null_hypothesis import NullHypothesis
-from multinull_jsd.cdf_backends import CDFBackend
-from multinull_jsd._validators import (
+from mn_squared.null_structures.null_hypothesis import NullHypothesis
+from mn_squared.cdf_backends import CDFBackend
+from mn_squared._validators import (
     validate_int_value, validate_probability_vector, validate_bounded_value, validate_null_indices, validate_null_slice
 )
-from multinull_jsd.types import ScalarInt, FloatArray
+from mn_squared.types import ScalarInt, FloatArray
 from typing import Iterator, Iterable, Any, overload
 
 import numpy.typing as npt

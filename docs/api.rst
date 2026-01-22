@@ -1,7 +1,7 @@
 API reference
 =============
 
-.. automodule:: multinull_jsd
+.. automodule:: mn_squared
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,7 +9,7 @@ API reference
 Core
 ----
 
-.. automodule:: multinull_jsd.core
+.. automodule:: mn_squared.core
    :members:
    :undoc-members:
    :show-inheritance:
@@ -17,22 +17,22 @@ Core
 CDF backends
 ------------
 
-.. automodule:: multinull_jsd.cdf_backends.base
+.. automodule:: mn_squared.cdf_backends.base
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: multinull_jsd.cdf_backends.exact
+.. automodule:: mn_squared.cdf_backends.exact
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: multinull_jsd.cdf_backends.mc_multinomial
+.. automodule:: mn_squared.cdf_backends.mc_multinomial
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: multinull_jsd.cdf_backends.mc_normal
+.. automodule:: mn_squared.cdf_backends.mc_normal
    :members:
    :undoc-members:
    :show-inheritance:
@@ -40,12 +40,12 @@ CDF backends
 Null structures
 ---------------
 
-.. automodule:: multinull_jsd.null_structures.indexed_hypotheses
+.. automodule:: mn_squared.null_structures.indexed_hypotheses
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: multinull_jsd.null_structures.null_hypothesis
+.. automodule:: mn_squared.null_structures.null_hypothesis
    :members:
    :undoc-members:
    :show-inheritance:
@@ -53,7 +53,7 @@ Null structures
 Types
 -----
 
-.. automodule:: multinull_jsd.types
+.. automodule:: mn_squared.types
    :members:
    :undoc-members:
    :show-inheritance:

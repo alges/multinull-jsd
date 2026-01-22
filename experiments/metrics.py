@@ -259,7 +259,7 @@ def _metrics_rows_from_decisions(
     scenario_slug:
         Slug for the scenario (used in downstream joins/exports).
     method:
-        Canonical method label (e.g., "MultiNullJSD", "Chi2-Pearson+Holm").
+        Canonical method label (e.g., "MNSquared", "Chi2-Pearson+Holm").
     n:
         Evidence size (histogram total count).
     true_kind:

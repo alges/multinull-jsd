@@ -2,7 +2,7 @@
 Tests for the validate_histogram_batch function.
 """
 # noinspection PyProtectedMember
-from multinull_jsd._validators import validate_histogram_batch
+from mn_squared._validators import validate_histogram_batch
 from tests.conftest import histogram, histogram_batch
 from hypothesis import given
 from typing import TypeAlias

@@ -8,13 +8,13 @@ import sys
 import os
 
 # -- Path setup --------------------------------------------------------------
-# Add project root so Sphinx can import `multinull_jsd`
+# Add project root so Sphinx can import `mn_squared`
 sys.path.insert(0, os.path.abspath(path=""))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project: str = "multinull-jsd"
+project: str = "mn-squared"
 author: str = "ALGES"
 copyright: str = f"{datetime.now().year}, {author}"  # noqa
 release: str = "1.0.0"

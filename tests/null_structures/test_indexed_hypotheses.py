@@ -1,7 +1,7 @@
 """
 Unit tests for the IndexedHypotheses class.
 """
-from multinull_jsd.null_structures import IndexedHypotheses, NullHypothesis
+from mn_squared.null_structures import IndexedHypotheses, NullHypothesis
 from tests.conftest import TestCDFBackend
 
 from typing import TypeAlias

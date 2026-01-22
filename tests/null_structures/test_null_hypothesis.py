@@ -1,7 +1,7 @@
 """
 Unit tests for the NullHypothesis class.
 """
-from multinull_jsd.null_structures import NullHypothesis
+from mn_squared.null_structures import NullHypothesis
 from tests.conftest import TestCDFBackend
 from typing import TypeAlias, cast
 

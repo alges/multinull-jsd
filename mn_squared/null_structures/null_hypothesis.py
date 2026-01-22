@@ -10,10 +10,10 @@ Responsibilities
 This module focuses on input validation, bookkeeping, and clean method signatures. Heavy numerical work belongs in CDF
 backends.
 """
-from multinull_jsd._jsd_distance import jsd
-from multinull_jsd.cdf_backends import CDFBackend
-from multinull_jsd._validators import validate_bounded_value, validate_probability_vector, validate_histogram_batch
-from multinull_jsd.types import FloatArray, ScalarFloat, IntArray, CDFCallable, FloatDType
+from mn_squared._jsd_distance import jsd
+from mn_squared.cdf_backends import CDFBackend
+from mn_squared._validators import validate_bounded_value, validate_probability_vector, validate_histogram_batch
+from mn_squared.types import FloatArray, ScalarFloat, IntArray, CDFCallable, FloatDType
 from typing import Any, Optional
 
 import numpy.typing as npt

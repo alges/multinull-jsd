@@ -2,13 +2,12 @@
 null_structures package
 =======================
 
-Internal containers used by *multinull_jsd*.
+Internal containers used by *mn_squared*.
 
-This sub-package is **not** intended for end-users; the high-level class `multinull_jsd.core.MultiNullJSDTest`
-re-exports everything needed for typical workflows. Still, advanced users may import directly for custom
-pipelines:
+This sub-package is **not** intended for end-users; the high-level class `mn_squared.core.MNSquaredTest` re-exports
+everything needed for typical workflows. Still, advanced users may import directly for custom pipelines:
 
->>> from multinull_jsd.null_structures import IndexedHypotheses, NullHypothesis
+>>> from mn_squared.null_structures import IndexedHypotheses, NullHypothesis
 
 Public re-exports
 -----------------

@@ -1,5 +1,5 @@
-from multinull_jsd.cdf_backends import ExactCDFBackend, MultinomialMCCDFBackend
-from multinull_jsd.types import CDFCallable
+from mn_squared.cdf_backends import ExactCDFBackend, MultinomialMCCDFBackend
+from mn_squared.types import CDFCallable
 
 from typing import Callable, TypeAlias
 

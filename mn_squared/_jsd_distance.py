@@ -3,8 +3,8 @@ Internal utilities to compute the Jensen–Shannon distance (JSd) between discre
 
 All functions here use base-2 logarithms so that JSd lies in [0, 1].
 """
-from multinull_jsd._validators import validate_probability_batch
-from multinull_jsd.types import FloatArray, FloatDType
+from mn_squared._validators import validate_probability_batch
+from mn_squared.types import FloatArray, FloatDType
 
 import numpy as np
 

@@ -1,7 +1,7 @@
 """
-Tests for the multinull_jsd package's __init__.py module.
+Tests for the mn_squared package's __init__.py module.
 """
-import multinull_jsd as pkg
+import mn_squared as pkg
 
 
 def test_available_cdf_backends_includes_expected() -> None:
@@ -17,11 +17,11 @@ def test_available_cdf_backends_includes_expected() -> None:
 
 def test_lazy_getattr_is_exposed() -> None:
     """
-    Test that the lazy __getattr__ correctly exposes the MultiNullJSDTest class.
+    Test that the lazy __getattr__ correctly exposes the MNSquaredTest class.
     """
-    cls: pkg.MultiNullJSDTest = getattr(pkg, "MultiNullJSDTest")
+    cls: pkg.MNSquaredTest = getattr(pkg, "MNSquaredTest")
     assert isinstance(cls, type)
-    assert cls.__name__ == "MultiNullJSDTest"
+    assert cls.__name__ == "MNSquaredTest"
 
 
 def test_dunder_dir_contains_public_api() -> None:
@@ -29,7 +29,7 @@ def test_dunder_dir_contains_public_api() -> None:
     Test that the __dir__ function includes the expected public API elements.
     """
     names: list[str] = dir(pkg)
-    assert "MultiNullJSDTest" in names
+    assert "MNSquaredTest" in names
     assert "available_cdf_backends" in names
 
 
@@ -41,6 +41,6 @@ def test_unknown_attribute_raises_attribute_error() -> None:
         getattr(pkg, "NonexistentAttribute")
     except AttributeError as e:
         exception_msg: str = str(e)
-        assert "multinull_jsd" in exception_msg and "NonexistentAttribute" in exception_msg
+        assert "mn_squared" in exception_msg and "NonexistentAttribute" in exception_msg
     else:
         raise AssertionError("Expected AttributeError was not raised")

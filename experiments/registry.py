@@ -16,7 +16,7 @@ from baselines.kernel_mmd import mmd_gaussian_pvalue, mmd_laplacian_pvalue
 from settings import M_MONTE_CARLO, FloatArray, IntArray
 
 
-METHOD_JSD_PREFIX: str = "MultiNullJSD"
+METHOD_JSD_PREFIX: str = "MNSquared"
 METHOD_JSD: str = METHOD_JSD_PREFIX
 
 BASELINE_SINGLE: dict[str, Callable[[IntArray, FloatArray], float]] = {

@@ -15,9 +15,9 @@ Design contract
   - monotone non-decreasing in ``tau``,
   - clipped to ``[0, 1]``.
 """
-from multinull_jsd._jsd_distance import jsd
-from multinull_jsd._validators import validate_int_value, validate_finite_array, validate_probability_vector
-from multinull_jsd.types import FloatDType, IntDType, FloatArray, IntArray, ScalarFloat, CDFCallable
+from mn_squared._jsd_distance import jsd
+from mn_squared._validators import validate_int_value, validate_finite_array, validate_probability_vector
+from mn_squared.types import FloatDType, IntDType, FloatArray, IntArray, ScalarFloat, CDFCallable
 from typing import Optional, Callable, cast
 from abc import ABC, abstractmethod
 

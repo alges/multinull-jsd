@@ -67,7 +67,7 @@ The remainder of this document describes the columns in the CSV.
 - `method`: Method label; all baselines are extended with the Bonferroni-Holm methodology to address multiple nulls.
   Expect the following values:
 
-  - `MultinullJSD`: our method.
+  - `MNSquared`: our method.
   - `Chi2-Pearson+Holm`: chi-square test.
   - `G-test-LLR+Holm`: G-test; log-likelihood ratio test.
   - `MMD-Gaussian+Holm`: MMD test: Gaussian kernel.
@@ -76,7 +76,7 @@ The remainder of this document describes the columns in the CSV.
   - `ExactMultinom-Chisq+Holm`: exact multinomial test: chi-square.
   - `ExactMultinom-LLR+Holm`: exact multinomial test: log-likelihood ratio.
   
-  For `scenario_name == "Scenario 1 — Balanced"`, expect only `MultinullJSD` to be present.
+  For `scenario_name == "Scenario 1 — Balanced"`, expect only `MNSquared` to be present.
 
 - `n`: Histogram sample size $n$ (number of multinomial trials / total count per histogram).
 
@@ -142,7 +142,7 @@ F
 - `p_misclass`: Empirical probability of choosing the wrong null. NaN for alternatives.
 
 - `cdf_method`: Backend/CDF computation mode (e.g., exact vs Monte Carlo-based approximation). Expect values `exact`,
-  `mc_multinomial` or `mc_normal` for `method == MultiNullJSD`; else, expect NaN.
+  `mc_multinomial` or `mc_normal` for `method == MNSquared`; else, expect NaN.
 
 - `mc_samples`: Number of Monte Carlo samples used by the backend (when applicable: `cdf_method == mc_multinomial` or
   `cdf_method == mc_normal`).
@@ -161,16 +161,16 @@ F
 
 - `beta_backend`: Backend-computed type II error estimate (if available). NaN for null rows.
 
-- `power_backend`: Backend-computed power estimate (if available). NaN for null rows and when `method != MultiNullJSD`.
+- `power_backend`: Backend-computed power estimate (if available). NaN for null rows and when `method != MNSquared`.
 
 - `runtime_infer_s`: Time spent evaluating decisions on histograms (inference phase).
 
 - `runtime_per_hist_s`: Average inference time per histogram.
 
-- `runtime_make_test_s`: Time spent constructing/initializing the test object. NaN for `method != MultiNullJSD`.
+- `runtime_make_test_s`: Time spent constructing/initializing the test object. NaN for `method != MNSquared`.
 
 - `runtime_backend_s`: Time spent inside the backend computation (exact/MC CDF/p-values). NaN for
-  `method != MultiNullJSD`.
+  `method != MNSquared`.
 
 - `runtime_total_method_s`: Total time attributable to the method for the scenario+`n` (setup + backend + inference).
 

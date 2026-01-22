@@ -1,8 +1,8 @@
 """
-Unit tests for multinull_jsd._jsd_distance.jsd.
+Unit tests for mn_squared._jsd_distance.jsd.
 """
 # noinspection PyProtectedMember
-from multinull_jsd._jsd_distance import jsd
+from mn_squared._jsd_distance import jsd
 
 from tests.conftest import p_vector
 from hypothesis import given

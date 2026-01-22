@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "multinull-jsd"
+name = "mn-squared"
 version = "1.0.0"
-description = "Multi-Null Jensen–Shannon Distance (JSd) hypothesis test."
+description = "Multi-Null Non-Parametric (MN-squared) Jensen–Shannon Distance (JSd) hypothesis test."
 readme = "README.md"
 requires-python = ">=3.12"
 license = {file = "LICENSE"}
@@ -30,14 +30,14 @@ demo = [
   "notebook>=7.0.0","jupyter>=1.0.0", "matplotlib>=3.10"
 ]
 exp = [
-    "pandas>=2.3", "scipy>=1.16", "hyppo>=0.5.2", "rpy2>=3.6", "tqdm>=4.67"
+    "pandas>=2.3", "scipy>=1.16", "hyppo>=0.5.2", "rpy2>=3.6", "tqdm>=4.67", "numpy<2.4"
 ]
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["multinull_jsd*"]
+include = ["mn_squared*"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
@@ -47,7 +47,7 @@ testpaths = ["tests"]
 [tool.ruff]
 target-version = "py310"
 line-length = 120
-src = ["multinull_jsd", "tests"]
+src = ["mn_squared", "tests"]
 fix = false
 
 [tool.ruff.lint]

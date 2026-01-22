@@ -1,4 +1,4 @@
-from multinull_jsd.cdf_backends import CDFBackend
+from mn_squared.cdf_backends import CDFBackend
 from tests.conftest import p_vector
 from hypothesis import given
 from typing import Callable, TypeAlias

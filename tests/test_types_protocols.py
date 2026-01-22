@@ -1,7 +1,7 @@
 """
-Unit tests for type aliases and protocols in multinull_jsd.types.
+Unit tests for type aliases and protocols in mn_squared.types.
 """
-from multinull_jsd.types import IntDType, FloatDType, FloatArray, ScalarFloat, CDFCallable
+from mn_squared.types import IntDType, FloatDType, FloatArray, ScalarFloat, CDFCallable
 
 import numpy as np
 

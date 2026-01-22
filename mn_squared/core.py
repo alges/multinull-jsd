@@ -1,32 +1,32 @@
 """
-High-level orchestrator for the Multi-Null JSd test.
+High-level orchestrator for the Multi-Null Non-Parametric JSd test.
 
 Typical usage
 -------------
->>> from multinull_jsd import MultiNullJSDTest
->>> test = MultiNullJSDTest(evidence_size=100, prob_dim=3, cdf_method="mc_multinomial", mc_samples=10_000, seed=0)
+>>> from mn_squared import MNSquaredTest
+>>> test = MNSquaredTest(evidence_size=100, prob_dim=3, cdf_method="mc_multinomial", mc_samples=10_000, seed=0)
 >>> test.add_nulls([0.5, 0.3, 0.2], target_alpha=0.05)  # Add a null hypothesis
 >>> test.add_nulls([0.4, 0.4, 0.2], target_alpha=0.01)  # Add another null hypothesis
 >>> h = [55, 22, 23]  # Observed histogram to test
 >>> p_vals = test.infer_p_values(h)  # Array of p-values for each null hypothesis
 >>> decisions = test.infer_decisions(h)  # Array of decisions (1 or 2 for each null hypothesis, -1 for the alternative)
 """
-from multinull_jsd.null_structures import IndexedHypotheses
-from multinull_jsd.cdf_backends import NON_MC_CDF_BACKEND_FACTORY, MC_CDF_BACKEND_FACTORY, CDFBackend
-from multinull_jsd._validators import (
+from mn_squared.null_structures import IndexedHypotheses
+from mn_squared.cdf_backends import NON_MC_CDF_BACKEND_FACTORY, MC_CDF_BACKEND_FACTORY, CDFBackend
+from mn_squared._validators import (
     validate_int_value, validate_finite_array, validate_histogram_batch, validate_probability_batch,
     validate_null_indices
 )
-from multinull_jsd.types import FloatArray, IntArray, FloatDType, IntDType, ScalarFloat, ScalarInt
+from mn_squared.types import FloatArray, IntArray, FloatDType, IntDType, ScalarFloat, ScalarInt
 from typing import Optional, Sequence, overload
 
 import numpy.typing as npt
 import numpy as np
 
 
-class MultiNullJSDTest:
+class MNSquaredTest:
     """
-    Class that orchestrates the Multi-Null JSd test decision rule.
+    Class that orchestrates the Multi-Null Non-Parametric JSd test decision rule.
 
     Parameters
     ----------
@@ -371,7 +371,7 @@ class MultiNullJSDTest:
 
     def __repr__(self) -> str:
         representation: str = (
-            f"MultiNullJSDTest(n={self._n}, k={self._k}, cdf_method={self._cdf_method!r}, n_nulls={len(self._nulls)}"
+            f"MNSquaredTest(n={self._n}, k={self._k}, cdf_method={self._cdf_method!r}, n_nulls={len(self._nulls)}"
         )
         if self._mc_samples is not None and self._seed is not None:
             representation += f", mc_samples={self._mc_samples}, seed={self._seed}"

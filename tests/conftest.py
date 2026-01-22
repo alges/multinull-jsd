@@ -1,8 +1,8 @@
 """
 Configuration and fixtures for tests.
 """
-from multinull_jsd.cdf_backends import CDFBackend
-from multinull_jsd.types import FloatDType, IntDType, FloatArray, IntArray
+from mn_squared.cdf_backends import CDFBackend
+from mn_squared.types import FloatDType, IntDType, FloatArray, IntArray
 from hypothesis.extra import numpy as hnp
 from hypothesis import strategies as st
 

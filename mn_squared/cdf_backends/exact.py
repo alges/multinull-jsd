@@ -16,8 +16,8 @@ Notes
 """
 from .base import CDFBackend
 
-from multinull_jsd._validators import validate_probability_vector
-from multinull_jsd.types import FloatArray, IntArray, FloatDType, IntDType
+from mn_squared._validators import validate_probability_vector
+from mn_squared.types import FloatArray, IntArray, FloatDType, IntDType
 
 from typing import Optional
 

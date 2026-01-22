@@ -1,8 +1,8 @@
 """
-Tests for the probability and non-negativity validators in multinull_jsd._validators.
+Tests for the probability and non-negativity validators in mn_squared._validators.
 """
 # noinspection PyProtectedMember
-from multinull_jsd._validators import (
+from mn_squared._validators import (
     validate_probability_vector, validate_probability_batch, validate_non_negative_batch, FLOAT_TOL
 )
 from tests.conftest import p_vector, p_batch

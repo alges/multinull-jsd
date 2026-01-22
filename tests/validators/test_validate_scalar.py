@@ -1,8 +1,8 @@
 """
-Tests for the scalar validation functions in multinull_jsd._validators.
+Tests for the scalar validation functions in mn_squared._validators.
 """
 # noinspection PyProtectedMember
-from multinull_jsd._validators import validate_bounded_value, validate_int_value
+from mn_squared._validators import validate_bounded_value, validate_int_value
 from hypothesis import given, strategies as st
 from typing import TypeAlias, Optional, Any, cast
 

@@ -1,12 +1,12 @@
 """
-multinull_jsd
+mn_squared
 =============
 
 Python implementation of the *Multi-Null Jensen-Shannon Distance (JSd) hypothesis test*.
 
 Public re-export
 ----------------
-``MultiNullJSDTest``
+``MNSquaredTest``
     High-level interface that wraps null-hypothesis management, JSd statistic calculation, p-value inference,
     decision-making, and operating-characteristic inspection (Type-I and Type-II error rates).
 
@@ -14,8 +14,8 @@ Notes
 -----
 The sub-packages
 
-* :py:mod:`multinull_jsd.cdf_backends`
-* :py:mod:`multinull_jsd.null_structures`
+* :py:mod:`mn_squared.cdf_backends`
+* :py:mod:`mn_squared.null_structures`
 
 provide pluggable CDF estimation back-ends and internal data structures. These remain available for advanced users via
 the normal import path.
@@ -23,10 +23,10 @@ the normal import path.
 from importlib.metadata import PackageNotFoundError, version as _dist_version
 from typing import Any, TYPE_CHECKING
 
-__all__ = ["MultiNullJSDTest", "available_cdf_backends", "__version__"]
+__all__ = ["MNSquaredTest", "available_cdf_backends", "__version__"]
 
 if TYPE_CHECKING:
-    from .core import MultiNullJSDTest
+    from .core import MNSquaredTest
 
 
 def available_cdf_backends() -> tuple[str, ...]:
@@ -43,10 +43,10 @@ def available_cdf_backends() -> tuple[str, ...]:
 
 
 def __getattr__(name: str) -> Any:
-    if name == "MultiNullJSDTest":
-        from .core import MultiNullJSDTest as _MultiNullJSDTest
-        globals()["MultiNullJSDTest"] = _MultiNullJSDTest
-        return _MultiNullJSDTest
+    if name == "MNSquaredTest":
+        from .core import MNSquaredTest as _MNSquaredTest
+        globals()["MNSquaredTest"] = _MNSquaredTest
+        return _MNSquaredTest
     if name == "__version__":
         v: str = _package_version()
         globals()["__version__"] = v
@@ -75,7 +75,7 @@ def _package_version() -> str:
     -------
     The version string of the package if found, otherwise "0.0.0".
     """
-    candidates: tuple[str, ...] = ("multinull-jsd", __name__, __name__.replace("_", "-"))
+    candidates: tuple[str, ...] = ("mn-squared", __name__, __name__.replace("_", "-"))
     for dist_name in candidates:
         try:
             return _dist_version(distribution_name=dist_name)

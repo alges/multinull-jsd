@@ -3,8 +3,8 @@ Monte-Carlo CDF backend based on the Gaussian CLT approximation.
 """
 from .base import CDFBackend
 
-from multinull_jsd._validators import validate_int_value, validate_probability_vector
-from multinull_jsd.types import IntDType, FloatDType, IntArray, FloatArray
+from mn_squared._validators import validate_int_value, validate_probability_vector
+from mn_squared.types import IntDType, FloatDType, IntArray, FloatArray
 
 import numpy.typing as npt
 import numpy as np

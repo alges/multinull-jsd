@@ -1,5 +1,5 @@
 """
-Utility type aliases and protocols used across *multinull_jsd*.
+Utility type aliases and protocols used across *mn_squared*.
 
 The file purposefully contains **no runtime logic** so it can be imported without triggering heavy scientific routines
 during static-typing or documentation builds.
